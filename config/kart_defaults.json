@@ -1,0 +1,20 @@
+{
+  "baud_rate": 9600,
+  "serial_port": "/dev/cu.usbmodem11401",
+  "reading_speed": 0,
+  "writing_speed": 0,
+  "packet_header": 17733,
+  "packet_footer": 17990,
+  "packet_ok": "47470a",
+  "motor_halt": 0,
+  "motor_left": 100,
+  "motor_right": 50,
+  "js_threshold": 25,
+  "js_axes": [
+    3,
+    3,
+    3
+  ],
+  "js_dtzn": 10,
+  "verbose": false
+}

@@ -1,0 +1,61 @@
+body {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bolder;
+    color: yellow;
+    background-color: black;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* centra verticalmente */
+    align-items: center;     /* centra orizzontalmente */
+    height: 100vh;
+
+    margin: 0;
+    gap: 20px; /* distanza tra titolo e bottoni */
+}
+
+/* stile bottoni */
+.container button {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bolder;
+    font-size: large;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* contenitore centrato */
+.container {
+    display: flex;
+    flex-direction: row; /* bottoni uno sotto l’altro */
+    align-items: center;    /* 👈 centra i bottoni */
+    gap: 15px;
+}
+
+/* bottone 1 */
+        .start_button {
+            background-color: yellow;
+            color: black;
+        }
+
+        .start_button:hover {
+            background-color: lightgreen;
+            color: black;
+        }
+
+        /* bottone 2 */
+        .stop_button {
+            background-color: yellow;
+            color: black;
+        }
+
+        .stop_button:hover {
+            background-color: red;
+        }
+
+        .page_logo {
+            height: 150px;
+            width: auto;
+        }

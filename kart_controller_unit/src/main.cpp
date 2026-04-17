@@ -1,23 +1,15 @@
 #include <Arduino.h>
 #include <Servo.h>
 
-#define BAUD_RATE 9600
-
+#define BAUD_RATE 115200
 #define PACKET_SIZE 10
 #define HEADER 0x4545
 #define FOOTER 0x4646
 
-#define STEERING_S1 33
-#define STEERING_S2 31
-#define STEERING_SP 9
-
-#define MOTOR_HALT 0x0000
-#define MOTOR_LEFT 0x0064
-#define MOTOR_RIGHT 0x0032
+#define DIR_PIN 3
+#define PWM_PIN 9
 
 uint8_t buffer[PACKET_SIZE];
-uint8_t responce[] = {0x47, 0x47, 0x0a};
-Servo velocity_controller;
 
 struct
 {
@@ -26,31 +18,26 @@ struct
   uint16_t x;
 } steering_data;
 
-void steer_left(){
-  digitalWrite(STEERING_S1, HIGH);
-  digitalWrite(STEERING_S2, LOW);
-}
+struct
+{
+  float acc1;
+  float acc2;
+  float acc3;
+  float temp;
+  int16_t footer;
+} core_responce;
 
-void steer_right(){
-  digitalWrite(STEERING_S1, LOW);
-  digitalWrite(STEERING_S2, HIGH);
-}
-
-void steer_halt(){
-  digitalWrite(STEERING_S1, LOW);
-  digitalWrite(STEERING_S2, LOW);
-}
 
 void setup(){
   Serial.begin(BAUD_RATE);
+
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(DIR_PIN, OUTPUT);
+
+  digitalWrite(DIR_PIN, LOW);
+  analogWrite(PWM_PIN, 0);
+
   while (!Serial.available());
-
-  pinMode(STEERING_S1, OUTPUT);
-  pinMode(STEERING_S2, OUTPUT);
-
-  velocity_controller.attach(STEERING_SP);
-
-  Serial.println("run_due version 2 booting!");
 }
 
 void serial_flush(){
@@ -65,7 +52,7 @@ uint16_t __gt_word(int x, uint8_t* buffer){
   return ((buffer[x] << 8) | buffer[x+1]);
 }
 
-int recieve_packet(uint8_t* buf){
+int receive_packet(uint8_t* buf){
   if (Serial.available()){
     int number = Serial.readBytesUntil('\n', buf, PACKET_SIZE);
 
@@ -76,8 +63,9 @@ int recieve_packet(uint8_t* buf){
   return 0;
 }
 
+
 void loop() {
-    int s = recieve_packet(buffer);
+    int s = receive_packet(buffer);
 
     steering_data.direction = __gt_word(2, buffer);
     steering_data.velocity = __gt_word(4, buffer);
@@ -85,22 +73,17 @@ void loop() {
 
     if (!s) return;
 
-    switch (steering_data.direction){
-      case MOTOR_HALT:
-        steer_halt();
-        break;
-      case MOTOR_LEFT:
-        steer_left();
-        break;
-      case MOTOR_RIGHT:
-        steer_right();
-        break;
-      default:
-        break;
-    }
+    core_responce = {
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0x0a47
+    };
 
-    velocity_controller.write(steering_data.velocity);
+    analogWrite(PWM_PIN, steering_data.velocity);
+    digitalWrite(DIR_PIN, steering_data.direction);
 
-    Serial.write(responce, sizeof(responce));
+    Serial.write((uint8_t *)&core_responce, sizeof(core_responce));
     serial_flush();
 }

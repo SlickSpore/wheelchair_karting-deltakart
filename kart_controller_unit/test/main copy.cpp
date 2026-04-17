@@ -2,90 +2,29 @@
 #include <Servo.h>
 
 #define BAUD_RATE 115200
-#define SERIAL_SLEEP_INTERVAL 1000
+
 #define PACKET_SIZE 10
+#define HEADER 0x4545
+#define FOOTER 0x4646
 
-#define STEERING_S1 33
-#define STEERING_S2 31
+#define STEERING_S1 3
+#define STEERING_S2 2
+#define STEERING_SP 9
 
-#define MOTOR_HALT 0x00
-#define MOTOR_LEFT 0x32
-#define MOTOR_RIGHT 0x64
+#define MOTOR_HALT 0x0000
+#define MOTOR_LEFT 0x0064
+#define MOTOR_RIGHT 0x0032
 
-#define MOTOR_DIRECTION_ADDR 0x02
-#define MOTOR_VELOCITY_ADDR 0x04
+uint8_t buffer[PACKET_SIZE];
+uint8_t responce[] = {0x47, 0x47, 0x0a};
+Servo velocity_controller;
 
-typedef struct {
-  uint16_t steering_direction;
-  uint16_t angular_velocity;
-} interface_command_t;
-
-uint8_t frame[PACKET_SIZE];
-interface_command_t command;
-
-Servo velocity_pot;
-
-
-/*
-
-  Serial Reading/Writing Routines
-
-*/
-
-
-uint16_t get_value_from_frame(uint8_t frame[PACKET_SIZE], int pos){
-  if ((pos%2)!=0) return 0;
-  if (pos > PACKET_SIZE - 1) return 0;
-  if (pos < 0) return 0;
-  return (frame[pos] << 8) | frame[pos+1];
-}
-
-void retrieve_packet(interface_command_t* command) {
-  static uint8_t buffer[PACKET_SIZE];
-  static uint8_t idx = 0; 
-
-  while (Serial.available()) {
-    uint8_t b = Serial.read();
-
-    if (idx == 0 && b != 0x45) continue;
-    if (idx == 1 && b != 0x45) {
-      idx = 0;
-      continue;
-    }
-
-    buffer[idx++] = b;
-    if (idx != PACKET_SIZE) continue;
-    if (buffer[PACKET_SIZE - 2] != 0x46 || buffer[PACKET_SIZE - 1] != 0x46) break;
-    
-    command->angular_velocity = get_value_from_frame(buffer, MOTOR_VELOCITY_ADDR);
-    command->steering_direction = get_value_from_frame(buffer, MOTOR_DIRECTION_ADDR);
-
-    idx = 0;
-    break;
-  }  
-}
-
-void keep_alive(){
-  unsigned long this_time = millis();
-  static unsigned long last_time = 0;
-
-  if (this_time-last_time >= SERIAL_SLEEP_INTERVAL){
-    Serial.print(this_time/1000);
-    Serial.print(command.angular_velocity, HEX);
-    Serial.println(command.steering_direction, HEX);
-    last_time = this_time;
-  }
-
-}
-
-
-/*
-
-  Kart Control Routines
-
-*/
-
-
+struct
+{
+  uint16_t direction;
+  uint16_t velocity;
+  uint16_t x;
+} steering_data;
 
 void steer_left(){
   digitalWrite(STEERING_S1, HIGH);
@@ -102,39 +41,66 @@ void steer_halt(){
   digitalWrite(STEERING_S2, LOW);
 }
 
-
-/*
-
-  Main Loop
-
-*/
-
-
 void setup(){
   Serial.begin(BAUD_RATE);
-  while (Serial.available()<0);;
-  Serial.println("kart_controller_unit version 3.0 booting up!");
-  pinMode(LED_BUILTIN, OUTPUT);
+  while (!Serial.available());
+
+  pinMode(STEERING_S1, OUTPUT);
+  pinMode(STEERING_S2, OUTPUT);
+
+  velocity_controller.attach(STEERING_SP);
+
+  Serial.println("run_due version 2 booting!");
 }
 
-void loop(){
-  keep_alive();
+void serial_flush(){
+  while (Serial.available() > 0) 
+  Serial.read();
+}
 
-  retrieve_packet(&command);
-  digitalWrite(LED_BUILTIN, command.steering_direction == 0x6161 ? HIGH: LOW);
+uint16_t __gt_word(int x, uint8_t* buffer){
+  if (x > PACKET_SIZE) return 0;
+  if (x < 0) return 0;
+  if ((x%2) != 0) return 0;
+  return ((buffer[x] << 8) | buffer[x+1]);
+}
 
-  switch (command.steering_direction){
-    case MOTOR_HALT:
-      steer_halt();
-      break;
-    case MOTOR_LEFT:
-      steer_left();
-      break;
-    case MOTOR_RIGHT:
-      steer_right();
-      break;
-    default:
-      break;
+int receive_packet(uint8_t* buf){
+  if (Serial.available()>10){
+    int number = Serial.readBytesUntil('\n', buf, PACKET_SIZE);
+
+    if (__gt_word(0, buf) == HEADER && __gt_word(PACKET_SIZE-2, buf) == FOOTER){
+      return number;
+    }
   }
+  return 0;
+}
 
+void loop() {
+    int s = receive_packet(buffer);
+
+    if (!s) return;
+
+    steering_data.direction = __gt_word(2, buffer);
+    steering_data.velocity = __gt_word(4, buffer);
+    steering_data.x = __gt_word(6, buffer);
+
+
+    switch (steering_data.direction){
+      case MOTOR_HALT:
+        steer_halt();
+        break;
+      case MOTOR_LEFT:
+        steer_left();
+        break;
+      case MOTOR_RIGHT:
+        steer_right();
+        break;
+      default:
+        break;
+    }
+
+    velocity_controller.write(steering_data.velocity);
+    //serial_flush();
+    Serial.write(responce, sizeof(responce));
 }

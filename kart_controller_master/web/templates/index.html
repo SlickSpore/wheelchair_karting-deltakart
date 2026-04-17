@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!-- Written By Ettore Caccioli, 17/04/2026 © Wheelchair Karting -->
+<html>
+    <link rel="stylesheet" href="{{url_for('static', filename='styles.css')}}">
+    <head>
+        <title>DeltaKart Web Controller</title>
+        <link rel="icon" href="{{url_for('static', filename='favicon.jpg')}}" type="image/x-icon" class="favicon">
+    </head>
+    <body>
+        <img src="{{url_for('static', filename='logo.jpg')}}" class="page_logo">
+        <h1 id="status_bar">DeltaKart Web Controller</h1>
+        <div class="container">
+        <button class="start_button" onclick=start()>Start Driving</button>
+        <button class="stop_button" onclick=stop()>Stop Kart</button>
+        </div>
+
+        <script src="{{url_for('static', filename='script.js')}}"></script>
+    </body>
+    <footer>
+        © 2026 Wheelchair Karting
+    </footer>
+</html>

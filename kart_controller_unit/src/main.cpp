@@ -12,6 +12,7 @@
 #define STOP_PIN 7
 
 #define set_steer_direction_d(a, b) PORTD = b ? (PORTD | (b<<(a))) : (PORTD & (b<<(a)))
+#define check_safety(a) !((PIND&(1<<a))>>a)
 
 uint8_t buffer[PACKET_SIZE];
 
@@ -73,7 +74,7 @@ void loop() {
     int s = receive_packet(buffer);
 
     steering_data.direction = __gt_word(2, buffer);
-    steering_data.velocity = __gt_word(4, buffer);
+    steering_data.velocity = check_safety(a) ? 0 : __gt_word(4, buffer);
     steering_data.x = __gt_word(6, buffer);
 
     if (!s) return;

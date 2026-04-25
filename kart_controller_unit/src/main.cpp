@@ -12,7 +12,7 @@
 #define STOP_PIN 7
 
 #define set_steer_direction_d(a, b) PORTD = b ? (PORTD | (b<<(a))) : (PORTD & (b<<(a)))
-#define check_safety(a) !((PIND&(1<<a))>>a)
+#define check_safety(a) ((PIND&(1<<a))>>a)
 
 uint8_t buffer[PACKET_SIZE];
 
@@ -38,7 +38,8 @@ void setup(){
 
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(DIR_PIN, OUTPUT);
-  pinMode(STOP_PIN, INPUT_PULLUP);
+  pinMode(STOP_PIN, INPUT);
+  pinMode(13, OUTPUT);
 
   set_steer_direction_d(DIR_PIN, LOW);
   analogWrite(PWM_PIN, 0);
@@ -73,8 +74,10 @@ int receive_packet(uint8_t* buf){
 void loop() {
     int s = receive_packet(buffer);
 
+    digitalWrite(LED_BUILTIN, check_safety(STOP_PIN));
+
     steering_data.direction = __gt_word(2, buffer);
-    steering_data.velocity = check_safety(a) ? 0 : __gt_word(4, buffer);
+    steering_data.velocity = check_safety(STOP_PIN) ? 0 : __gt_word(4, buffer);
     steering_data.x = __gt_word(6, buffer);
 
     if (!s) return;

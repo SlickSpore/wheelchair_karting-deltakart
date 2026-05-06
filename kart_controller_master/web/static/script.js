@@ -52,13 +52,13 @@ function prst_2(){
 }
 function prst_3(){
     bar.textContent = "Selected Preset 3, Reload System to Apply Changes"
-    fetch('/preset_2')
+    fetch('/preset_3')
 }
 function prst_4(){
     bar.textContent = "Selected Preset 4, Reload System to Apply Changes"
-    fetch('/preset_2')
+    fetch('/preset_4')
 }
 function prst_5(){
     bar.textContent = "Selected Preset 5, Reload System to Apply Changes"
-    fetch('/preset_2')
+    fetch('/preset_5')
 }

@@ -8,7 +8,7 @@ import subprocess, threading, enum, json
 
 class StatusCodes(enum.Enum):
     JOYSTICK_HAS_FAILED = 255 
-    SERIAL_HAS_FAILED = 255 
+    SERIAL_HAS_FAILED = 254 
     CORE_IDLE = 0
     CORE_RUNNING = 1
     CORE_ALREADY_RUNNING = 2
@@ -30,7 +30,7 @@ def check_core_failure():
             case StatusCodes.JOYSTICK_HAS_FAILED.value:
                 core_status = StatusCodes.JOYSTICK_HAS_FAILED
             case StatusCodes.SERIAL_HAS_FAILED.value:
-                core_status = StatusCodes.JOYSTICK_HAS_FAILED
+                core_status = StatusCodes.SERIAL_HAS_FAILED
             case _:
                 core_status = StatusCodes.CORE_RUNNING
 
@@ -145,14 +145,17 @@ def preset_2():
 
 @app.route('/preset_3')
 def preset_3():
+    core_config(core_presets["preset_3"]["args"])
     return jsonify({"core_preset_mode":"preset_3"})
 
 @app.route('/preset_4')
 def preset_4():
+    core_config(core_presets["preset_4"]["args"])
     return jsonify({"core_preset_mode":"preset_4"})
 
 @app.route('/preset_5')
 def preset_5():
+    core_config(core_presets["preset_5"]["args"])
     return jsonify({"core_preset_mode":"preset_5"})
 
 @app.route("/core_stop", methods=["POST"])
@@ -165,6 +168,7 @@ def core_stop():
     thread.join()
 
     core_status = StatusCodes.CORE_IDLE
+    
     return jsonify(
         {
             "kart_signal": "sig_stop"

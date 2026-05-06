@@ -39,7 +39,6 @@ void setup(){
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(DIR_PIN, OUTPUT);
   pinMode(STOP_PIN, INPUT);
-  pinMode(13, OUTPUT);
 
   set_steer_direction_d(DIR_PIN, LOW);
   analogWrite(PWM_PIN, 0);

@@ -1,26 +1,26 @@
 {
     "preset_1":{
-        "visible_name":"Default Mode",
-        "args": [
-            "--js_axes=3,3,3"
-        ]
-    },
-    "preset_2":{
-        "visible_name":"Test Mode",
+        "visible_name":"Yoke",
         "args": [
             "--js_axes=1,1,1"
         ]
     },
-    "preset_3":{
-        "visible_name":"Unused",
+    "preset_2":{
+        "visible_name":"Joystick",
         "args": [
-            
+            "--js_axes=3,3,3"
+        ]
+    },
+    "preset_3":{
+        "visible_name":"USB1",
+        "args": [
+            "--serial_port='/dev/cu.usbserial-1210'"
         ]
     },
     "preset_4":{
-        "visible_name":"Unused",
+        "visible_name":"USB0",
         "args": [
-            
+            "--serial_port='/dev/ttyUSB0'"
         ]
     },
     "preset_5":{

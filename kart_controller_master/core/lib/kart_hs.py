@@ -1,15 +1,20 @@
-import serial, enum, struct, math, time
+import serial, enum, struct, math, time, numpy
 
 class PacketDataTypes(enum.Enum):
-    AGM_DATA = 0x1704
+    AGM_DATA      = 0x1704
     QTR_DATA      = 0x1516
     ATT_DATA      = 0x1126
+    MPU_RESP      = 0x0781
+
+class IMUCommands(enum.Enum):
+    SET_REPORT_SPEED = 0x60
+    IMU_CALIB        = 0x70
 
 PACKET_BEGIN    = 0x7e23
 ACC_SCALE       = 16/32767.0
 GYRO_SCALE      = (2000/32767.0)*(math.pi/180.0)
 MAG_SCALE       = 800/32767.0
-
+CAP_SPEED       = 25
 
 def connect_headset(port):
     return serial.Serial(port, baudrate=115200)
@@ -28,6 +33,8 @@ def get_packet_type(header) -> PacketDataTypes:
             return PacketDataTypes.QTR_DATA
         case PacketDataTypes.ATT_DATA.value:
             return PacketDataTypes.ATT_DATA
+        case PacketDataTypes.MPU_RESP.value:
+            return PacketDataTypes.MPU_RESP
 
 def get_data(packet_type: PacketDataTypes, headset):
     match packet_type:
@@ -50,23 +57,25 @@ def convert_data(packet_type, data):
             roll, pitch, yaw, _ = data
             return roll, pitch, yaw
 
-def set_sensor_speed(sensor: serial.Serial, speed):
-    hf = "hhhB"
-    data = struct.pack(hf, 0x237e, 0x6007, (0x5f<<8)|speed, 0xff)
-    time.sleep(1)
-    for i in range(200):
-        sensor.write(data)
-        time.sleep(1/200)
 
+def send_command(sensor, command, parameter1, parameter2=0x5f):
+    data = [0x7e, 0x23, 0x00, command, parameter1, parameter2]
+    data[2] = len(data) + 1
+    checksum = 0xff & sum(data)
+    data.append(checksum)
+    data = bytes(data)
+    sensor.write(data)
 
 class KartHeadset:
-    def __init__(self):
-        self.hs = connect_headset("/dev/tty.usbserial-11210")
+    def __init__(self, port):
+        self.hs = connect_headset(port)
         self.last_packet = 0
         self.data = None
         self.ptype = None
 
-        set_sensor_speed(self.hs, 10)
+        self.data_frames = []
+
+        send_command(self.hs, IMUCommands.SET_REPORT_SPEED.value, CAP_SPEED)
 
     def update(self):
         packet = get_byte(self.hs)
@@ -78,27 +87,49 @@ class KartHeadset:
                 self.data = convert_data(self.ptype, raw_data)
         self.last_packet = packet
             
-    def get_accelerometer_data(self):
+    def get_accelerometer_data(self, precision=2):
         if self.ptype is PacketDataTypes.AGM_DATA:
             ax, ay, az, _, _, _, _, _, _ = self.data
-            return ax, ay, az
+            return [round(i,precision) for i in [ax, ay, az]]
         else:
             return -1
         
-    def get_gyroscope_data(self):
+    def get_gyroscope_data(self, precision=2):
         if self.ptype is PacketDataTypes.AGM_DATA:
             _, _, _, gx, gy, gz, _, _, _ = self.data
-            return gx, gy, gz
+            return [round(i,precision) for i in [gx, gy, gz]]
         else:
             return -1
+        
+    def smooth_acc_data(self, amount, precision=2):
+        x, y, z = self.data
+        self.data_frames.append([x, y, z])
+        if len(self.data_frames)>amount:
+            while len(self.data_frames)>amount:
+                del self.data_frames[0]
+        x, y, z = 0,0,0
+
+        for i, e in enumerate(self.data_frames):
+            x += self.data_frames[i][0]
+            y += self.data_frames[i][1]
+            z += self.data_frames[i][2]
+
+        del self.data_frames [0]
+
+        return [round(i,precision) for i in ([x, y, z]/amount)]
+        
 
 if __name__ == "__main__":
-    hs = KartHeadset()
-    old_time = time.time()
+    hs1 = KartHeadset("/dev/tty.usbserial-1210")
+    hs2 = KartHeadset("/dev/tty.usbserial-130")
+    a1x, a1y, a1z = 0,0,0
+    a2x, a2y, a2z = 0,0,0
     while KeyboardInterrupt:
-        t_now = time.time()
-        hs.update()
-        if hs.ptype is PacketDataTypes.AGM_DATA:
-            hs.get_accelerometer_data()
-        print(t_now-old_time)
-        old_time = t_now
+        hs1.update()
+        hs2.update()
+        if hs1.ptype is PacketDataTypes.AGM_DATA:
+            a1x, a1y, a1z = hs1.get_accelerometer_data()
+        if hs2.ptype is PacketDataTypes.AGM_DATA:
+            a2x, a2y, a2z = hs2.get_accelerometer_data()
+        print(f"IMU1:\t{a1x},\t{a1y},\t{a1z}\tIMU2:\t{a2x},\t{a2y},\t{a2z}")
+        

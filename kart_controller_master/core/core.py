@@ -77,7 +77,7 @@ class JOYSTICK_RUN:
         print(" *                                      *")
         print("====== Written by Ettore Caccioli =======")
 
-        self.js = ks.Kart_Joystick_Input()
+        self.js = ks.KartJoystickInput()
         self.attach_arduino()
 
         terminal_log("|RunTime|=====|X-Accel|========|Y-Accel|=======|G-Accel|=======|CoreTemp|")

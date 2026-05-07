@@ -6,7 +6,7 @@ import pygame
 JS_SETUP = [2,5,4]
 JS_DZ = 10
 
-class Kart_Joystick_Input:
+class KartJoystickInput:
     def __init__(self, id=0):
 
         self.steering_angle = 0
@@ -51,10 +51,9 @@ class Kart_Joystick_Input:
 
 
 if __name__ == "__main__":
-    js = kart_joystick_input()
+    js = KartJoystickInput()
 
     while True:
         pygame.event.pump()
         js.load_current_state(JS_SETUP, JS_DZ)
-        
         print(js.brake_pedal)

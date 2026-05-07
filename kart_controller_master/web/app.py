@@ -1,4 +1,4 @@
-from flask import render_template, Flask, jsonify
+from flask import render_template, Flask, jsonify, request
 import subprocess, threading, enum, json
 
 """
@@ -76,13 +76,6 @@ def core_start():
 def kart_config():
     return render_template("config.html")
 
-@app.route('/preset_names')
-def preset_names():
-    global core_presets
-    with open("web/static/presets.json", "r") as jsf:
-        core_presets = json.load(jsf)
-    return jsonify(core_presets)
-
 @app.route('/status')
 def status():
     print(core_status)
@@ -130,34 +123,6 @@ def status():
                 }
             )
 
-def core_config(args):
-    subprocess.Popen((["python3", "core/config/kart_config.py"] + args))
-
-@app.route('/preset_1')
-def preset_1():
-    core_config(core_presets["preset_1"]["args"])
-    return jsonify({"core_preset_mode":"preset_1"})
-
-@app.route('/preset_2')
-def preset_2():
-    core_config(core_presets["preset_2"]["args"])
-    return jsonify({"core_preset_mode":"preset_2"})
-
-@app.route('/preset_3')
-def preset_3():
-    core_config(core_presets["preset_3"]["args"])
-    return jsonify({"core_preset_mode":"preset_3"})
-
-@app.route('/preset_4')
-def preset_4():
-    core_config(core_presets["preset_4"]["args"])
-    return jsonify({"core_preset_mode":"preset_4"})
-
-@app.route('/preset_5')
-def preset_5():
-    core_config(core_presets["preset_5"]["args"])
-    return jsonify({"core_preset_mode":"preset_5"})
-
 @app.route("/core_stop", methods=["POST"])
 def core_stop():
     global core_status
@@ -188,6 +153,21 @@ def core_shutdown():
         }
     )
 
+def core_config(args):
+    subprocess.Popen((["python3", "core/config/kart_config.py"] + args))
+
+@app.route('/set_preset', methods=["POST"])
+def set_preset():
+    preset = request.data.decode()
+    core_config(core_presets[preset]["args"])
+    return jsonify({"core_preset_mode":preset})
+
+@app.route('/preset_names')
+def preset_names():
+    global core_presets
+    with open("web/static/presets.json", "r") as jsf:
+        core_presets = json.load(jsf)
+    return jsonify(core_presets)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80)

@@ -117,3 +117,13 @@ body {
     background-color: #F4E9CD;
     color: black;
 }
+
+@media (orientation: portrait) {
+  body {
+    font-size: 9px;
+  }
+  .container button {
+    font-size: small;
+    padding: auto;
+  }
+}

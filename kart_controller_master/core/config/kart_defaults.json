@@ -1,6 +1,6 @@
 {
   "baud_rate": 115200,
-  "serial_port": "'/dev/cu.usbserial-1210'",
+  "serial_port": "/dev/tty.usbserial-140",
   "reading_speed": 0.005,
   "writing_speed": 0.005,
   "packet_header": 17733,
@@ -15,7 +15,7 @@
     3,
     3
   ],
-  "js_dtzn": 10,
+  "js_dtzn": 1,
   "verbose": false,
   "motor_maxangle": 255,
   "generate_defaults": 0,

@@ -1,32 +1,20 @@
 {
     "preset_1":{
-        "visible_name":"Yoke",
+        "visible_name":"Polso",
+        "args": [
+            "--js_axes=2,2,2"
+        ]
+    },
+    "preset_2":{
+        "visible_name":"Spinta",
         "args": [
             "--js_axes=1,1,1"
         ]
     },
-    "preset_2":{
-        "visible_name":"Joystick",
-        "args": [
-            "--js_axes=3,3,3"
-        ]
-    },
     "preset_3":{
-        "visible_name":"USB1",
+        "visible_name":"Laterale",
         "args": [
-            "--serial_port='/dev/cu.usbserial-1210'"
-        ]
-    },
-    "preset_4":{
-        "visible_name":"USB0",
-        "args": [
-            "--serial_port='/dev/ttyUSB0'"
-        ]
-    },
-    "preset_5":{
-        "visible_name":"Unused",
-        "args": [
-            
+            "--js_axes=0,0,0"
         ]
     }
 }

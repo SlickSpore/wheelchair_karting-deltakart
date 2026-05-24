@@ -6,7 +6,13 @@ echo "====== Written by Ettore Caccioli ========"
 echo "\n[+] Generating/Updating Startup File"
 
 SERVICE_NAME="Wheelchair Karting® Delta Kart Core's Service"
+ACCESS_POINT_PATH="web/access_point"
+ACCESS_POINT_DEST="/usr/local/bin"
 CWD=$(pwd)
+
+cp $ACCESS_POINT_PATH/ap_start.sh $ACCESS_POINT_DEST/
+chmod +x $ACCESS_POINT_DEST/ap_start.sh
+
 TARGET=gunicorn -c web/gunicorn_config.py web.app:app -w 1 -b 0.0.0.0:8000
 
 SERVICE_PATH="/etc/systemd/system/kart.service"

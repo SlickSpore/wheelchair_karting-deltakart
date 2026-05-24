@@ -13,8 +13,11 @@
         <div class="container">
         <button class="start_button" onclick=start()>Start Driving</button>
         <button class="stop_button" onclick=stop()>Stop Kart</button>
-        <a href="{{ url_for('kart_config') }}">
+        <a href="{{url_for('kart_config')}}">
             <button class="edit_button" onclick="submit">Configure</button>
+        </a>
+        <a href="{{url_for('camera')}}">
+            <button class="camera_button" onclick="submit">Camera</button>
         </a>
         <button class="quit_button" onclick=shutdown()>System Quit</button>
         </div>

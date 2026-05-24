@@ -13,6 +13,7 @@ warnings.filterwarnings(
 )
 import time, datetime, threading, serial, sys, signal
 import lib.kart_js as ks
+import lib.kart_hs as hs
 
 from config.kart_config import *
 
@@ -23,6 +24,26 @@ from config.kart_config import *
 k_cfg = Kart_Settings()
 
 # ================== # 
+
+
+core_running = False
+core_command = (0,0,0)
+
+arduino_serial = None
+
+def print_core_hello():
+    print("===   ©   Wheelchair Karting® 2026     ===")
+    print(" *                                      *")
+    print(" *         DeltaKart Core V3.0          *")
+    print(" *                                      *")
+    print("====== Written by Ettore Caccioli =======")
+
+def get_direction_and_speed(x, death_zone):
+    velocity = int(k_cfg.MOTOR_BASEANGLE+((abs(x)-death_zone)/(100-death_zone))*(k_cfg.MOTOR_MAXANGLE-k_cfg.MOTOR_BASEANGLE))
+    return k_cfg.MOTOR_LEFT if x > 0 else k_cfg.MOTOR_RIGHT, 0 if abs(x) < death_zone else velocity
+
+def packet_is_valid(x):
+    return 1 if x == k_cfg.PACKET_OK else 0
 
 def handler(sig, frame):
     print("SIGTERM_QUIT!")
@@ -39,6 +60,10 @@ def twos_complement(val, bits) -> int:
     return val
 
 def craft_packet(x, y, z) -> bytes:
+    """
+    Assembles a packet to be sent to the slave
+    """
+
     return bytes(
         htons(k_cfg.PACKET_HEADER) + 
         htons(x) + 
@@ -48,138 +73,189 @@ def craft_packet(x, y, z) -> bytes:
         [ord('\r')] + [ord('\n')])
 
 def terminal_log(x, end='\n'):
-    if k_cfg.VERBOSE: print(f"{datetime.datetime.now()}: {x}", end=end)
+    if k_cfg.VERBOSE: print(
+        f"{datetime.datetime.now()}: {x}",
+        end=end
+    )
+
+def attach_arduino():
+    """
+    Establishes a connection with the slave.
+    
+    Errors: Raises Fatal Error -2 if no connection is available.
+    The webpage procedes to report the error to the user.
+    """
+    try:
+        return serial.Serial(
+            k_cfg.SERIAL_PORT, 
+            baudrate=k_cfg.BAUD_RATE, 
+            timeout=1
+        )
+    except serial.SerialException:
+        print("[!] FATAL: Serial Failure! -> Check Connections Before Running")
+        exit(-2)
+
+def hello_arduino(self):
+    """
+    Sends 2 dummy packets waiting for responce to arduino slave.
+    """
+
+    arduino_serial.write(
+        craft_packet(0,0,0)
+    )
+    arduino_serial.readline()
+
+    arduino_serial.write(
+        craft_packet(0xff, 0xff, 0xff)
+    )
+    arduino_serial.readline()
+
+
+def serial_worker(self):
+    """
+    Description: This routine estableshes a connection between 
+    the arduino slave and the computer core with
+    a countinous serial stream running via thread.
+
+    Every Iteration a packet is sent with this format:
+
+                [HEADER]    : 0x4747
+                [x]         : 0x0000
+                [y]         : 0x0000
+                [z]         : 0x0000
+                [FOOTER]    : 0x470a
+
+    Errors: In case of error, reconnection is attempted by keeping
+    the serial open waiting for arduino's User Reset Interrupt
+    or a spontanous one.
+    """
+
+    hello_arduino()
+
+    while core_running:
+        x, y, z = core_command
+        packet = craft_packet(x, y, z)
+
+        try:
+            responce = 0
+            arduino_serial.write(packet)
+            responce = arduino_serial.readline() #.hex().strip()
+        except Exception as e:
+            terminal_log(f"CONNECTION FAILURE - [{e}], Proceding with LOOP -> {responce}")
+
+        terminal_log(f"{packet.hex().strip()} -> {'OK!' if packet_is_valid(responce) else 'FAILURE!'}")
+        time.sleep(k_cfg.WRITING_SPEED)
 
 
 class JOYSTICK_RUN:
-    def attach_arduino(self):
-        try:
-            self.arduino = serial.Serial(
-                k_cfg.SERIAL_PORT, 
-                baudrate=k_cfg.BAUD_RATE, 
-                timeout=1
-            )
-        except serial.SerialException:
-            print("[!] FATAL: Serial Failure! -> Check Connections Before Running")
-            exit(-2)
+    """ Joystick Operating Mode """
 
     def __init__(self):
-        self.command = (0,0,0)
-        self.running = False
+        global core_running, core_command, arduino_serial
+
+        core_command = (0,0,0)
+        core_running = False
+
         self.worker = threading.Thread(
             target=self.serial_worker, 
             daemon=True
         )
 
-        print("===   ©   Wheelchair Karting® 2026     ===")
-        print(" *                                      *")
-        print(" *         DeltaKart Core V2.0          *")
-        print(" *                                      *")
-        print("====== Written by Ettore Caccioli =======")
-
         self.js = ks.KartJoystickInput()
-        self.attach_arduino()
+        arduino_serial = attach_arduino()
 
-        terminal_log("|RunTime|=====|X-Accel|========|Y-Accel|=======|G-Accel|=======|CoreTemp|")
         self.responce_format = '<ffffH'
-        self.start_time = time.time()
-
-    def is_valid(self, x):
-        return 1 if x == k_cfg.PACKET_OK else 0
-
-    def hello_arduino(self):
-        self.arduino.write(
-            craft_packet(0,0,0)
-        )
-        self.arduino.readline()
-
-        self.arduino.write(
-            craft_packet(0xff, 0xff, 0xff)
-        )
-        self.arduino.readline()
-
-    def reconnect_arduino(self):
-        self.arduino.close()
-        self.attach_arduino()
-        self.hello_arduino()
-
-    def load_core_data(self, responce):
-
-        acc1, acc2, acc3, temp, _ = struct.unpack(self.responce_format, responce)
-
-        self.acc1 = round(acc1,2) 
-        self.acc2 = round(acc2,2) 
-        self.acc3 = round(acc3,2)
-        self.temp = round(temp,2)
-
-    def try_reconnection(self, responce):
-        if not self.is_valid(responce):
-            terminal_log(f"ARDUINO FAILURE - [got_no_responce], Attempting Reconnection")
-            try:
-                self.reconnect_arduino()
-            except Exception as e:
-                terminal_log(f"CONNECTION FAILURE - [{e}], Attempting Reconnection")
-
-    def serial_worker(self):
-
-        self.hello_arduino()
-
-        while self.running:
-            x, y, z = self.command
-            packet = craft_packet(x, y, z)
-
-            try:
-                responce = 0
-                self.arduino.write(packet)
-                responce = self.arduino.readline() #.hex().strip()
-                self.load_core_data(responce)
-
-                terminal_log(f" {round(time.time()-self.start_time, 2):.3f}s\t\t{("+" if self.acc1 > 0 else '-') + str(abs(self.acc1))}g\t\t{("+" if self.acc2 > 0 else '-' )+ str(abs(self.acc2))}g\t\t{("+" if self.acc3 > 0 else '-') + str(abs(self.acc3))}g\t\t{self.temp}°C", end='\r')
-
-            except Exception as e:
-                terminal_log(f"CONNECTION FAILURE - [{e}], Proceding with LOOP -> {responce}")
-
-
-            terminal_log(f"{packet.hex().strip()} -> {'OK!' if self.is_valid(responce) else 'FAILURE!'}")
-
-            time.sleep(k_cfg.WRITING_SPEED)
-
-    def get_direction_and_speed(self, js_angle, death_zone):
-        velocity = int((int(abs(js_angle)-death_zone)/(100-death_zone))*k_cfg.MOTOR_MAXANGLE)
-        return k_cfg.MOTOR_LEFT if js_angle < 0 else k_cfg.MOTOR_RIGHT, 0 if abs(js_angle) < death_zone else velocity
 
     def start(self):
-        self.running = True
+        global core_running, core_command
+
+        core_running = True
         self.worker.start()
+
         try:
             print("[+] Kart Core Started, You Can Drive!")
-            while self.running:
+            while core_running:
+
                 self.js.trigger_update()
                 self.js.load_current_state(
                     k_cfg.JS_AXES, 
                     k_cfg.JS_DTZN
                 )
 
-                direction, velocity = self.get_direction_and_speed(self.js.steering_angle, k_cfg.JS_THRESHOLD)
+                direction, velocity = get_direction_and_speed(self.js.steering_angle, k_cfg.JS_THRESHOLD)
 
-                self.command = (direction, velocity, 0)
+                core_command = (direction, velocity, 0)
                 time.sleep(k_cfg.READING_SPEED)
         
         except KeyboardInterrupt:
-            self.running = False
+            core_running = False
             self.worker.join()
-            self.arduino.close()
+            arduino_serial.close()
 
 class HEADSET_RUN:
+    """ Headset Operating Mode """
+
     def __init__(self):
-        pass
+        global core_running, core_command, arduino_serial
+
+        core_command = (0,0,0)
+        core_running = False
+
+        self.worker = threading.Thread(
+            target=serial_worker, 
+            daemon=True
+        )
+
+        self.hs = hs.KartHeadsetInput()
+        arduino_serial = attach_arduino()
+
+        self.responce_format = '<ffffH'
+
+        # add calibration
+
+
+    def start(self):
+        global core_running, core_command
+
+        core_running = True
+        self.worker.start()
+
+        center = [0,0]
+
+        try:
+            print("[+] Kart Core Started, You Can Drive!")
+            while core_running:
+
+                hs_id, hs_pos = self.hs.get_headset_position(show=True)
+
+                pos = (1 if center[0] < 0 else -1) * hs.relative_distance(center, self.hs.cam_center[0])
+
+                if hs_id == -1:
+                    continue
+                elif hs_id == 0:
+                    break
+                
+                center = hs.get_center_position(hs_pos)-self.hs.cam_center
+
+                direction, velocity = get_direction_and_speed(pos,k_cfg.HS_DTZN)
+
+                core_command = (direction, velocity, 0)
+                time.sleep(k_cfg.READING_SPEED)
+        
+        except KeyboardInterrupt:
+            core_running = False
+            self.worker.join()
+            arduino_serial.close()
 
 if __name__ == "__main__":
-    print(k_cfg.CORE_MODE)
+    print_core_hello()
+
     match k_cfg.CORE_MODE:
         case CoreModes.JOYSTICK:
             debug = JOYSTICK_RUN()
             signal.signal(signal.SIGTERM, handler)
             debug.start()
         case CoreModes.HEADSET:
-            print("Ops, it's a bit too early to use this...")
+            debug = HEADSET_RUN()
+            signal.signal(signal.SIGTERM, handler)
+            debug.start()

@@ -1,0 +1,20 @@
+<!-- Camera Viewer Web Page -->
+<!DOCTYPE html>
+<!-- Written By Ettore Caccioli, 17/04/2026 © Wheelchair Karting -->
+<html>
+    <link rel="stylesheet" href="{{url_for('static', filename='styles.css')}}">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>DeltaKart's Camera Viewer</title>
+        <link rel="icon" href="{{url_for('static', filename='favicon.jpg')}}" type="image/x-icon" class="favicon">
+    </head>
+    <body>
+        <a href="{{url_for('index')}}">
+            <img src="{{url_for('static', filename='logo.jpg')}}" class="page_logo">
+        </a>
+        <img src="{{url_for('static', filename='camera/img.png')}}" class="camera_view">
+    </body>
+    <footer>
+        © 2026 Wheelchair Karting
+    </footer>
+</html>

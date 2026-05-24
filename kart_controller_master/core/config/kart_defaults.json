@@ -19,5 +19,7 @@
   "verbose": false,
   "motor_maxangle": 255,
   "generate_defaults": 0,
-  "core_mode": "joystick"
+  "core_mode": "headset",
+  "motor_baseangle": 10,
+  "hs_dtzn": 10
 }

@@ -56,6 +56,11 @@ body {
     color: black;
 }
 
+.camera_button {
+    background-color: yellow;
+    color: black;
+}
+
 .edit_button:hover {
     background-color: #95b1af;
     color: black;
@@ -74,9 +79,19 @@ body {
     color: black;
 }
 
+.camera_button:hover{
+    background: #031926;
+    color: white;
+}
+
 .page_logo {
     height: 150px;
     width: auto;
+}
+
+.camera_view {
+    height: auto;
+    width: 200;
 }
 
 .preset_but_1:hover {

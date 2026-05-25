@@ -1,6 +1,6 @@
 {
   "baud_rate": 115200,
-  "serial_port": "/dev/tty.usbserial-140",
+  "serial_port": "/dev/tty.usbserial-21210",
   "reading_speed": 0.005,
   "writing_speed": 0.005,
   "packet_header": 17733,

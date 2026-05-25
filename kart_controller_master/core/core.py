@@ -111,7 +111,7 @@ def hello_arduino(self):
     arduino_serial.readline()
 
 
-def serial_worker(self):
+def serial_worker():
     """
     Description: This routine estableshes a connection between 
     the arduino slave and the computer core with
@@ -224,23 +224,27 @@ class HEADSET_RUN:
 
         try:
             print("[+] Kart Core Started, You Can Drive!")
-            while core_running:
 
-                hs_id, hs_pos = self.hs.get_headset_position(show=True)
+            while core_running:
+                hs_id, hs_pos = self.hs.get_headset_position()
 
                 pos = (1 if center[0] < 0 else -1) * hs.relative_distance(center, self.hs.cam_center[0])
-
-                if hs_id == -1:
-                    continue
-                elif hs_id == 0:
-                    break
-                
-                center = hs.get_center_position(hs_pos)-self.hs.cam_center
 
                 direction, velocity = get_direction_and_speed(pos,k_cfg.HS_DTZN)
 
                 core_command = (direction, velocity, 0)
-                time.sleep(k_cfg.READING_SPEED)
+                
+                print(core_command)
+
+                if hs_id == -1:
+                    pos = 0
+                    continue
+                elif hs_id == 0:
+                    break
+                
+                print(f"Headset Found! ID: {hs_id}")
+
+                center = hs.get_center_position(hs_pos)-self.hs.cam_center
         
         except KeyboardInterrupt:
             core_running = False

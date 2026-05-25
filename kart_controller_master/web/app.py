@@ -18,15 +18,17 @@ PYTHON_CORE = "core/core.py"
 PYTHON_CORE_CONFIG = "core/config/kart_config.py"
 
 app = Flask(__name__)
-
 runner = None
 thread = None
 core_status = StatusCodes.CORE_IDLE
-
 core_presets = None
 
-# Checks for core's proper communication and return code. Returns the actual error returned by the core.
 def check_core_failure(): 
+    """
+    Checks for a core failure and catches the core's exit code.
+    
+    Returns: Core Status in a StatusCodes instance
+    """
     global core_status
     if runner:
         runner.communicate()
@@ -38,34 +40,61 @@ def check_core_failure():
             case _:
                 core_status = StatusCodes.CORE_RUNNING
 
-# Main Page Routing
 @app.route("/")
 def home():
+    """
+    Index Page
+    """
     return render_template("index.html")
 
-# Alternative for main page
 @app.route("/index")
 def index():
+    """
+    Index Page Alias
+    """
     return render_template("index.html")
 
 # Takes a snapshot of the camera view
 @app.route("/camera")
 def camera():
-    import cv2
+    """
+    Camera Viewing Page
+    Takes a snapshot from the driver's camera in order to 
+    calibrate and center the headset position.
 
-    cap = cv2.VideoCapture(0)
+    Renders the snapshot to a webpage.
+    """
+    import core.lib.kart_hs as hs
+
+    detector = hs.kart_ARUCO_init()
+
+    cap, k, d, dim, cent = hs.load_video_data()
+
     _, frame = cap.read()
+
+    frame = hs.cv2.undistort(frame, k, d)
+
+    _, ids, _ = detector.detectMarkers(frame)
+
     cap.release()
 
-    cv2.imwrite("web/static/camera/img.png", frame)
+    frame = hs.cv2.line(frame, [cent[0], 0], [cent[0], dim[1]], (0, 0, 255), 5)
+    frame = hs.cv2.line(frame, [0, cent[1]], [dim[0], cent[1]], (0, 0, 255), 5)
 
-    # include marker detection algorithm
+    if ids is not None:
+        frame = hs.cv2.putText(frame, f"Headset Found! id/s: {ids}", (40, 40), hs.cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 2)
+
+    hs.cv2.imwrite("web/static/camera/img.png", frame)
 
     return render_template("camera.html")
 
 # Core Start Routine
 @app.route("/core_start", methods=["POST"])
 def core_start():
+    """
+    Tells the core to start, sets the status to 
+    running and starts the check core failure thread
+    """
     global runner, core_status, thread
     print("starting go kart")
 
@@ -98,11 +127,18 @@ def core_start():
 # Renders Preset Page
 @app.route('/config')
 def kart_config():
+    """
+    Renders kart_config.py web page
+    """
     return render_template("config.html")
 
 # Opens Status Api Page With The relative Statuses
 @app.route('/status')
 def status():
+    """
+    Returns core's status to the webpage
+    """
+
     print(core_status)
     match (core_status):
         case StatusCodes.JOYSTICK_HAS_FAILED:

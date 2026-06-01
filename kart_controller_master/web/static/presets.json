@@ -2,19 +2,40 @@
     "preset_1":{
         "visible_name":"Polso",
         "args": [
+            "--core_mode=joystick",
             "--js_axes=2,2,2"
         ]
     },
     "preset_2":{
         "visible_name":"Spinta",
         "args": [
+            "--core_mode=joystick",
             "--js_axes=1,1,1"
         ]
     },
     "preset_3":{
         "visible_name":"Laterale",
         "args": [
+            "--core_mode=joystick",
             "--js_axes=0,0,0"
+        ]
+    },
+    "preset_4":{
+        "visible_name":"Testa",
+        "args": [
+            "--core_mode=headset"
+        ]
+    },
+    "preset_5":{
+        "visible_name":"Cam S:150",
+        "args": [
+            "--cam_max_s=150"
+        ]
+    },
+    "preset_6":{
+        "visible_name":"Cam S:1000",
+        "args": [
+            "--cam_max_s=1000"
         ]
     }
 }

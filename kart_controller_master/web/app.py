@@ -1,5 +1,7 @@
 from flask import render_template, Flask, jsonify, request
 import subprocess, threading, enum, json
+import core.lib.kart_status as k_s
+
 
 """
     Written By Ettore Caccioli 17/04/2026
@@ -22,6 +24,7 @@ runner = None
 thread = None
 core_status = StatusCodes.CORE_IDLE
 core_presets = None
+leds = k_s.StatusLeds()
 
 def check_core_failure(): 
     """
@@ -70,6 +73,8 @@ def camera():
 
     cap, k, d, dim, cent = hs.load_video_data()
 
+    hs.time.sleep(1)
+
     _, frame = cap.read()
 
     frame = hs.cv2.undistort(frame, k, d)
@@ -97,6 +102,8 @@ def core_start():
     """
     global runner, core_status, thread
     print("starting go kart")
+
+    leds.set_status(k_s.LedStatus.SET)
 
     # Starts the runner and sets the status page
     if runner and runner.poll() is None:
@@ -139,7 +146,6 @@ def status():
     Returns core's status to the webpage
     """
 
-    print(core_status)
     match (core_status):
         case StatusCodes.JOYSTICK_HAS_FAILED:
             return jsonify(
@@ -189,12 +195,13 @@ def status():
 def core_stop():
     global core_status
     print("stopping go kart")
-    
+
+    core_status = StatusCodes.CORE_IDLE
+    leds.set_status(k_s.LedStatus.READY)
+
     runner.terminate()
     runner.wait()
     thread.join()
-
-    core_status = StatusCodes.CORE_IDLE
     
     return jsonify(
         {
@@ -207,6 +214,7 @@ def core_stop():
 def core_shutdown():
     global core_status
     core_status = StatusCodes.CORE_SHUTDOWN
+    leds.turn_off()
     process = subprocess.Popen(["shutdown", "now"])
     stdin, stderr = process.communicate()
 

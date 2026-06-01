@@ -30,6 +30,8 @@ args = parser.parse_args()
 class CoreModes(Enum):
     JOYSTICK = "joystick"
     HEADSET = "headset"
+    SOCKET_RECIEVER = "socket-reciever"
+    SOCKET_TRANSMITTER = "socket-transmitter"
 
 class Kart_Settings():
     def __init__(self):

@@ -95,7 +95,7 @@ def attach_arduino():
         print("[!] FATAL: Serial Failure! -> Check Connections Before Running")
         exit(-2)
 
-def hello_arduino(self):
+def hello_arduino():
     """
     Sends 2 dummy packets waiting for responce to arduino slave.
     """
@@ -211,8 +211,6 @@ class HEADSET_RUN:
 
         self.responce_format = '<ffffH'
 
-        # add calibration
-
 
     def start(self):
         global core_running, core_command
@@ -234,15 +232,14 @@ class HEADSET_RUN:
 
                 core_command = (direction, velocity, 0)
                 
-                print(core_command)
-
                 if hs_id == -1:
+                    print("[+] Heaset Lost!")
                     pos = 0
                     continue
                 elif hs_id == 0:
                     break
                 
-                print(f"Headset Found! ID: {hs_id}")
+                print(f"[-] Headset Found!")
 
                 center = hs.get_center_position(hs_pos)-self.hs.cam_center
         
@@ -250,6 +247,10 @@ class HEADSET_RUN:
             core_running = False
             self.worker.join()
             arduino_serial.close()
+
+class SOCKET_RUN_Reciever:
+    def __init__(self, x):
+        self = x
 
 if __name__ == "__main__":
     print_core_hello()
@@ -261,5 +262,13 @@ if __name__ == "__main__":
             debug.start()
         case CoreModes.HEADSET:
             debug = HEADSET_RUN()
+            signal.signal(signal.SIGTERM, handler)
+            debug.start()
+        case CoreModes.SOCKET_RECIEVER:
+            debug = SOCKET_RUN_Reciever()
+            signal.signal(signal.SIGTERM, handler)
+            debug.start()
+        case CoreModes.SOCKET_TRANSMITTER:
+            debug = SOCKET_RUN_Transmitter()
             signal.signal(signal.SIGTERM, handler)
             debug.start()

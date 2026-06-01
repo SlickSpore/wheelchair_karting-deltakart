@@ -1,6 +1,8 @@
-from flask import render_template, Flask, jsonify, request
+from flask import render_template, Flask, jsonify, request, Response
 import subprocess, threading, enum, json
 import core.lib.kart_status as k_s
+import core.lib.kart_hs as hs
+
 
 
 """
@@ -43,6 +45,41 @@ def check_core_failure():
             case _:
                 core_status = StatusCodes.CORE_RUNNING
 
+# Set a Param of the core's configuration file
+def core_config(args):
+    subprocess.Popen((["python3", PYTHON_CORE_CONFIG] + args))
+
+def read_video():
+    detector = hs.kart_ARUCO_init()
+    camera, k, d, dim, cent = hs.load_video_data()
+
+    while True:
+        success, frame = camera.read()
+        if not success:
+            break
+
+        frame = hs.cv2.undistort(frame, k, d)
+        _, ids, _ = detector.detectMarkers(frame)
+
+        frame = hs.cv2.line(frame, [cent[0], 0], [cent[0], dim[1]], (0, 0, 255), 5)
+        frame = hs.cv2.line(frame, [0, cent[1]], [dim[0], cent[1]], (0, 0, 255), 5)
+
+        if ids is not None:
+            frame = hs.cv2.putText(frame, f"Headset Found! id/s: {ids}", (40, 40), hs.cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 2)
+
+        ret, buffer = hs.cv2.imencode('.jpg', frame)
+        if not ret:
+            continue
+
+        frame_bytes = buffer.tobytes()
+
+        yield (
+            b'--frame\r\n'
+            b'Content-Type: image/jpeg\r\n\r\n' +
+            frame_bytes +
+            b'\r\n'
+        )
+
 @app.route("/")
 def home():
     """
@@ -65,33 +102,16 @@ def camera():
     Takes a snapshot from the driver's camera in order to 
     calibrate and center the headset position.
 
-    Renders the snapshot to a webpage.
+    Pipes webcam's video to a webpage.
     """
-    import core.lib.kart_hs as hs
-
-    detector = hs.kart_ARUCO_init()
-
-    cap, k, d, dim, cent = hs.load_video_data()
-
-    hs.time.sleep(1)
-
-    _, frame = cap.read()
-
-    frame = hs.cv2.undistort(frame, k, d)
-
-    _, ids, _ = detector.detectMarkers(frame)
-
-    cap.release()
-
-    frame = hs.cv2.line(frame, [cent[0], 0], [cent[0], dim[1]], (0, 0, 255), 5)
-    frame = hs.cv2.line(frame, [0, cent[1]], [dim[0], cent[1]], (0, 0, 255), 5)
-
-    if ids is not None:
-        frame = hs.cv2.putText(frame, f"Headset Found! id/s: {ids}", (40, 40), hs.cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 2)
-
-    hs.cv2.imwrite("web/static/camera/img.png", frame)
-
     return render_template("camera.html")
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(
+        read_video(),
+        mimetype='multipart/x-mixed-replace; boundary=frame'
+    )
 
 # Core Start Routine
 @app.route("/core_start", methods=["POST"])
@@ -223,10 +243,6 @@ def core_shutdown():
            "kart_status":"sig_poweroff"
         }
     )
-
-# Set a Param of the core's configuration file
-def core_config(args):
-    subprocess.Popen((["python3", PYTHON_CORE_CONFIG] + args))
 
 # Sets a particular Preset
 @app.route('/set_preset', methods=["POST"])

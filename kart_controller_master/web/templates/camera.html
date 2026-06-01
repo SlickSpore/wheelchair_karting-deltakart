@@ -11,7 +11,13 @@
         <a href="{{url_for('index')}}">
             <img src="{{url_for('static', filename='logo.jpg')}}" class="page_logo">
         </a>
-        <img src="{{url_for('static', filename='camera/img.png')}}" width="1280" height="720" class="camera_view">
+        <!-- <img src="{{url_for('static', filename='camera/img.png')}}" width="1280" height="720" class="camera_view"> -->
+        <img src="{{ url_for('video_feed') }}" width="1280" height="720">
+        <div class="container">
+            <!-- <button class="start_button"> Center Grid </button>
+            <button class="start_button"> Auto Exposure </button>
+            <button class="start_button"> Manual Exposure </button> -->
+        </div>
     </body>
     <footer>
         © 2026 Wheelchair Karting

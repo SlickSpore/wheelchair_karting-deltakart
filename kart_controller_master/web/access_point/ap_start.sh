@@ -5,5 +5,5 @@ DEVICE="wlan0"
 SSID="DeltaKart105"
 PASS="deltakart105"
 
-nmcli r $DEVICE on
+nmcli r wifi on
 nmcli dev wifi hotspot ifname $DEVICE ssid $SSID password $PASS

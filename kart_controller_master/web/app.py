@@ -4,7 +4,6 @@ import core.lib.kart_status as k_s
 import core.lib.kart_hs as hs
 
 
-
 """
     Written By Ettore Caccioli 17/04/2026
     © Wheelchair Karting
@@ -27,6 +26,7 @@ thread = None
 core_status = StatusCodes.CORE_IDLE
 core_presets = None
 leds = k_s.StatusLeds()
+leds.set_status(k_s.LedStatus.READY)
 
 def check_core_failure(): 
     """
@@ -49,36 +49,40 @@ def check_core_failure():
 def core_config(args):
     subprocess.Popen((["python3", PYTHON_CORE_CONFIG] + args))
 
-def read_video():
+def read_video_stream():
     detector = hs.kart_ARUCO_init()
     camera, k, d, dim, cent = hs.load_video_data()
 
-    while True:
-        success, frame = camera.read()
-        if not success:
-            break
+    try:
+        while True:
+            success, frame = camera.read()
+            if not success:
+                break
 
-        frame = hs.cv2.undistort(frame, k, d)
-        _, ids, _ = detector.detectMarkers(frame)
+            frame = hs.cv2.undistort(frame, k, d)
+            _, ids, _ = detector.detectMarkers(frame)
 
-        frame = hs.cv2.line(frame, [cent[0], 0], [cent[0], dim[1]], (0, 0, 255), 5)
-        frame = hs.cv2.line(frame, [0, cent[1]], [dim[0], cent[1]], (0, 0, 255), 5)
+            frame = hs.cv2.line(frame, [cent[0], 0], [cent[0], dim[1]], (0, 0, 255), 5)
+            frame = hs.cv2.line(frame, [0, cent[1]], [dim[0], cent[1]], (0, 0, 255), 5)
 
-        if ids is not None:
-            frame = hs.cv2.putText(frame, f"Headset Found! id/s: {ids}", (40, 40), hs.cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 2)
+            if ids is not None:
+                frame = hs.cv2.putText(frame, f"Headset Found! id/s: {ids}", (40, 40), hs.cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 2)
 
-        ret, buffer = hs.cv2.imencode('.jpg', frame)
-        if not ret:
-            continue
+            ret, buffer = hs.cv2.imencode('.jpg', frame)
+            if not ret:
+                continue
 
-        frame_bytes = buffer.tobytes()
+            frame_bytes = buffer.tobytes()
 
-        yield (
-            b'--frame\r\n'
-            b'Content-Type: image/jpeg\r\n\r\n' +
-            frame_bytes +
-            b'\r\n'
-        )
+            yield (
+                b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' +
+                frame_bytes +
+                b'\r\n'
+            )
+    finally:
+        if camera:
+            camera.release()
 
 @app.route("/")
 def home():
@@ -109,7 +113,7 @@ def camera():
 @app.route('/video_feed')
 def video_feed():
     return Response(
-        read_video(),
+        read_video_stream(),
         mimetype='multipart/x-mixed-replace; boundary=frame'
     )
 

@@ -157,7 +157,7 @@ class JOYSTICK_RUN:
         core_running = False
 
         self.worker = threading.Thread(
-            target=self.serial_worker, 
+            target=serial_worker, 
             daemon=True
         )
 

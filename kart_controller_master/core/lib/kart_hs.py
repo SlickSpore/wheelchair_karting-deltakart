@@ -4,7 +4,7 @@ markers = cv2.aruco
 
 CALIBRATION_FILE = "core/lib/data/camera_distortion.yaml"
 
-MULTIPLIER = 150
+MULTIPLIER = 250
 
 def get_center_position(plane_from_four_points: list):
     return numpy.mean(plane_from_four_points, axis=0)
@@ -99,7 +99,7 @@ class KartHeadsetInput:
 
         if ids is not None:
             if set_center:
-                center = numpy.astype(get_center_position(corners[0][0]), int)
+                center = get_center_position(corners[0][0]).astype(int);
                 self.cam_center = (center[0], center[1]) 
             return ids[0][0], corners[0][0]
         else:   
@@ -120,7 +120,7 @@ if __name__ == "__main__":
     try:
         while 1:
 
-            hs_id, hs_pos = headset.get_headset_position(show=False)
+            hs_id, hs_pos = headset.get_headset_position(show=True)
 
             if hs_id == -1:
                 continue

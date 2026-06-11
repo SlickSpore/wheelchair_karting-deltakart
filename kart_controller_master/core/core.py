@@ -182,7 +182,7 @@ class HEADSET_RUN:
         )
 
         self.headset = hs.KartHeadsetInput(disp_fb=True)
-        arduino_serial = attach_arduino()
+        #arduino_serial = attach_arduino()
 
         self.zero_position = hs.get_center_position(hs.cvt_bb_to_rect(self.headset.zero_bbox), axis=0)
 
@@ -193,13 +193,14 @@ class HEADSET_RUN:
         global core_running, core_command
 
         core_running = True
-        self.worker.start()
+        #self.worker.start()
 
 
         try:
             print("[+] Kart Core Started, You Can Drive!")
 
             while core_running:
+
                 frame, headset_bbox, headset_center = self.headset.get_head_position()
 
                 if headset_bbox == -1: 
@@ -214,10 +215,10 @@ class HEADSET_RUN:
 
                 direction, velocity = apply_curve(steering_sensibility_curve, input_value)
 
-                print(direction, velocity)
-
                 core_command = (direction, velocity, 0)
                 
+                print(core_command)
+
         except KeyboardInterrupt:
             self.headset.stop_driving()
             core_running = False

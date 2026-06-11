@@ -16,7 +16,7 @@ TARGET="gunicorn -c web/gunicorn_config.py web.app:app -w 1 -b 0.0.0.0:8000"
 
 SERVICE_NAME="Wheelchair Karting® Delta Kart Core's Service"
 KART_SERVICE_PATH="/etc/systemd/system/$KART_SERVICE"
-KART_SERVICE_CONTENT="[Unit]\nDescription=$SERVICE_NAME\nAfter=network.target\n\n[Service]\nExecStart=$TARGET\nRestart=always\nUser=kart1\nGroup=kart1\nWorkingDirectory=$CWD\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target\n"
+KART_SERVICE_CONTENT="[Unit]\nDescription=$SERVICE_NAME\nAfter=network.target\n\n[Service]\nExecStart=$TARGET\nRestart=always\nUser=root\nGroup=root\nWorkingDirectory=$CWD\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target\n"
 
 SERVICE_NAME="Wheelchair Karting® Access Point Startup Service"
 KART_AP_PATH="/etc/systemd/system/$AP_SERVICE"

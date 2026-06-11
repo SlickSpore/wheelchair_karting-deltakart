@@ -11,12 +11,12 @@ warnings.filterwarnings(
     category=UserWarning,
     message=".*pkg_resources*"
 )
-import time, datetime, threading, serial, sys, signal
+import time, datetime, threading, serial,  signal
 import lib.kart_js as ks
 import lib.kart_hs as hs
+from lib.kart import *
 
-from config.kart_config import *
-
+from config.kart_config import Kart_Settings, CoreModes
 
 # ================== # 
 
@@ -25,18 +25,12 @@ k_cfg = Kart_Settings()
 
 # ================== # 
 
+PRECISION = 4
 
 core_running = False
 core_command = (0,0,0)
-
+steering_sensibility_curve = get_curve((75, 100))
 arduino_serial = None
-
-def print_core_hello():
-    print("===   ©   Wheelchair Karting® 2026     ===")
-    print(" *                                      *")
-    print(" *         DeltaKart Core V3.0          *")
-    print(" *                                      *")
-    print("====== Written by Ettore Caccioli =======")
 
 def get_direction_and_speed(x, death_zone):
     velocity = int(k_cfg.MOTOR_BASEANGLE+((abs(x)-death_zone)/(100-death_zone))*(k_cfg.MOTOR_MAXANGLE-k_cfg.MOTOR_BASEANGLE))
@@ -44,20 +38,6 @@ def get_direction_and_speed(x, death_zone):
 
 def packet_is_valid(x):
     return 1 if x == k_cfg.PACKET_OK else 0
-
-def handler(sig, frame):
-    print("SIGTERM_QUIT!")
-    sys.exit(0)
-
-def htons(x, format='big'):
-    if format == 'little': return [(x & 0xFF), ((x >> 8) & 0xFF)] if type(x) is int else [(ord(x) & 0xFF), ((ord(x) >> 8) & 0xFF)]
-    if format == 'big': return [((x >> 8) & 0xFF), (x & 0xFF)] if type(x) is int else [((ord(x) >> 8) & 0xFF), (ord(x) & 0xFF)]
-    return -1
-
-def twos_complement(val, bits) -> int:
-    if val & (1 << (bits - 1)):
-        val -= 1 << bits
-    return val
 
 def craft_packet(x, y, z) -> bytes:
     """
@@ -72,11 +52,6 @@ def craft_packet(x, y, z) -> bytes:
         htons(k_cfg.PACKET_FOOTER) + 
         [ord('\r')] + [ord('\n')])
 
-def terminal_log(x, end='\n'):
-    if k_cfg.VERBOSE: print(
-        f"{datetime.datetime.now()}: {x}",
-        end=end
-    )
 
 def attach_arduino():
     """
@@ -94,6 +69,7 @@ def attach_arduino():
     except serial.SerialException:
         print("[!] FATAL: Serial Failure! -> Check Connections Before Running")
         exit(-2)
+
 
 def hello_arduino():
     """
@@ -141,11 +117,10 @@ def serial_worker():
             arduino_serial.write(packet)
             responce = arduino_serial.readline() #.hex().strip()
         except Exception as e:
-            terminal_log(f"CONNECTION FAILURE - [{e}], Proceding with LOOP -> {responce}")
+            print(f"CONNECTION FAILURE - [{e}], Proceding with LOOP -> {responce}")
 
-        terminal_log(f"{packet.hex().strip()} -> {'OK!' if packet_is_valid(responce) else 'FAILURE!'}")
+        print(f"{packet.hex().strip()} -> {'OK!' if packet_is_valid(responce) else 'FAILURE!'}")
         time.sleep(k_cfg.WRITING_SPEED)
-
 
 class JOYSTICK_RUN:
     """ Joystick Operating Mode """
@@ -206,8 +181,10 @@ class HEADSET_RUN:
             daemon=True
         )
 
-        self.hs = hs.KartHeadsetInput()
+        self.headset = hs.KartHeadsetInput(disp_fb=True)
         arduino_serial = attach_arduino()
+
+        self.zero_position = hs.get_center_position(hs.cvt_bb_to_rect(self.headset.zero_bbox), axis=0)
 
         self.responce_format = '<ffffH'
 
@@ -218,39 +195,34 @@ class HEADSET_RUN:
         core_running = True
         self.worker.start()
 
-        center = [0,0]
 
         try:
             print("[+] Kart Core Started, You Can Drive!")
 
             while core_running:
-                hs_id, hs_pos = self.hs.get_headset_position()
+                frame, headset_bbox, headset_center = self.headset.get_head_position()
 
-                pos = (1 if center[0] < 0 else -1) * hs.relative_distance(center, self.hs.cam_center[0])
+                if headset_bbox == -1: 
+                    continue
 
-                direction, velocity = get_direction_and_speed(pos,k_cfg.HS_DTZN)
+                input_value = hs.compute_steering_value(self.zero_position, headset_center)*100
+
+                if self.headset.show_frame(frame):
+                    hs.cv2.imshow("headset", frame)
+                    if hs.cv2.waitKey(1) == 27:
+                        break
+
+                direction, velocity = apply_curve(steering_sensibility_curve, input_value)
+
+                print(direction, velocity)
 
                 core_command = (direction, velocity, 0)
                 
-                if hs_id == -1:
-                    print("[+] Heaset Lost!")
-                    pos = 0
-                    continue
-                elif hs_id == 0:
-                    break
-                
-                print(f"[-] Headset Found!")
-
-                center = hs.get_center_position(hs_pos)-self.hs.cam_center
-        
         except KeyboardInterrupt:
+            self.headset.stop_driving()
             core_running = False
             self.worker.join()
             arduino_serial.close()
-
-class SOCKET_RUN_Reciever:
-    def __init__(self, x):
-        self = x
 
 if __name__ == "__main__":
     print_core_hello()
@@ -262,13 +234,5 @@ if __name__ == "__main__":
             debug.start()
         case CoreModes.HEADSET:
             debug = HEADSET_RUN()
-            signal.signal(signal.SIGTERM, handler)
-            debug.start()
-        case CoreModes.SOCKET_RECIEVER:
-            debug = SOCKET_RUN_Reciever()
-            signal.signal(signal.SIGTERM, handler)
-            debug.start()
-        case CoreModes.SOCKET_TRANSMITTER:
-            debug = SOCKET_RUN_Transmitter()
             signal.signal(signal.SIGTERM, handler)
             debug.start()

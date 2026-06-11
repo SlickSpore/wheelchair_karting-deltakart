@@ -49,24 +49,19 @@ def check_core_failure():
 def core_config(args):
     subprocess.Popen((["python3", PYTHON_CORE_CONFIG] + args))
 
-def read_video_stream():
-    detector = hs.kart_ARUCO_init()
-    camera, k, d, dim, cent = hs.load_video_data()
+def read_video_stream():    
+    cap = hs.cv2.VideoCapture(0, hs.cv2.CAP_V4L2)
+
+    cap.set(hs.cv2.CAP_PROP_FOURCC, hs.cv2.VideoWriter_fourcc(*'MJPG'))
+    cap.set(hs.cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(hs.cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    cap.set(hs.cv2.CAP_PROP_FPS, 30)
 
     try:
         while True:
-            success, frame = camera.read()
-            if not success:
+            ret, frame = cap.read()
+            if not ret:
                 break
-
-            frame = hs.cv2.undistort(frame, k, d)
-            _, ids, _ = detector.detectMarkers(frame)
-
-            frame = hs.cv2.line(frame, [cent[0], 0], [cent[0], dim[1]], (0, 0, 255), 5)
-            frame = hs.cv2.line(frame, [0, cent[1]], [dim[0], cent[1]], (0, 0, 255), 5)
-
-            if ids is not None:
-                frame = hs.cv2.putText(frame, f"Headset Found! id/s: {ids}", (40, 40), hs.cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 2)
 
             ret, buffer = hs.cv2.imencode('.jpg', frame)
             if not ret:
@@ -81,22 +76,38 @@ def read_video_stream():
                 b'\r\n'
             )
     finally:
-        if camera:
-            camera.release()
+        if cap:
+            cap.release()
 
 @app.route("/")
 def home():
     """
     Index Page
     """
-    return render_template("index.html")
+    return render_template("new_look.html")
+
+"""
+=============================
+"""
+@app.route("/new_look")
+def new_look():
+    return render_template("new_look.html")
+@app.route("/new_config")
+def new_config():
+    return render_template("new_config.html")
+@app.route("/new_camera")
+def new_camera():
+    return render_template("new_camera.html")
+"""
+=============================
+"""
 
 @app.route("/index")
 def index():
     """
     Index Page Alias
     """
-    return render_template("index.html")
+    return render_template("new_look.html")
 
 # Takes a snapshot of the camera view
 @app.route("/camera")

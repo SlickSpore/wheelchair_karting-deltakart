@@ -1,4 +1,4 @@
-import json, argparse, os
+import json, argparse, os, ast
 from enum import Enum
 
 
@@ -24,6 +24,7 @@ parser.add_argument("--js_axes")
 parser.add_argument("--js_dtzn")
 parser.add_argument("--hs_dtzn")
 parser.add_argument("--core_mode")
+parser.add_argument("--cam_bbox")
 
 args = parser.parse_args()
 
@@ -52,6 +53,7 @@ class Kart_Settings():
         self.JS_DTZN = settings_json["js_dtzn"]      
         self.HS_DTZN = settings_json["hs_dtzn"]      
         self.VERBOSE = settings_json["verbose"] 
+        self.CAM_BBOX = settings_json["cam_bbox"] 
         self.CORE_MODE = CoreModes.HEADSET if settings_json["core_mode"].lower() == CoreModes.HEADSET.value else CoreModes.JOYSTICK
 
 
@@ -78,6 +80,7 @@ def generate_defaults():
     global_variables["verbose"]         = False
     global_variables["motor_maxangle"]  = 120
     global_variables["core_mode"]       = "joystick"
+    global_variables["cam_bbox"]       = "(526, 113, 267, 314)"
 
     save_changes()
     exit(0)
@@ -102,6 +105,7 @@ if __name__ == "__main__":
     for arg, value in vars(args).items():
         if value is not None:
             if arg == "js_axes": value = [int(i) for i in value.split(',')]
+            if arg == "cam_bbox": value = ast.literal_eval(value)
             if arg == "verbose": value = bool(value.lower()=="true")
             try:
                 set(str(arg), int(value))

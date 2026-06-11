@@ -1,0 +1,139 @@
+h1 {
+    font-weight: bolder;
+    font-size: 70px;
+}
+
+body {
+    padding-top: 100px;
+    font-family: 'Courier New', Courier, monospace;
+    background-color: black;
+    color: yellow;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* centra verticalmente */
+    align-items: center;
+    gap: 20px;
+}
+
+.container {
+    gap: 15px;
+}
+/* stile bottoni */
+.container button {
+    background-color: yellow;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bolder;
+    font-size: xx-large;
+    padding: 20px 35px;
+    min-width: 300px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.config_btn:hover {
+    background-color: #95b1af;
+    color: black;
+}
+
+.quit_btn:hover {
+    background-color: #bc5b3f;
+}
+
+.stop_btn:hover {
+    background-color: red;
+}
+
+.start_btn:hover {
+    background-color: #aaea0e;
+    color: black;
+}
+
+.camera_btn:hover{
+    background: #031926;
+    color: white;
+}
+
+.joystick_btn:hover{
+    background: #031926;
+    color: white;
+}
+
+.quit_button:hover {
+    background-color: #bc5b3f;
+}
+
+.container table {
+    text-align: center;
+}
+
+.page_logo {
+    height: 150px;
+    width: auto;
+}
+
+.preset_but_1:hover {
+    background-color: #031926;
+    color: #F4E9CD;
+}
+.preset_but_2:hover {
+    background-color: #468189;
+    color: #F4E9CD;
+}
+.preset_but_3:hover {
+    background-color: #77ACA2;
+    color: black;
+}
+.preset_but_4:hover {
+    background-color: #9DBEBB;
+    color: black;
+}
+.preset_but_5:hover {
+    background-color: #F4E9CD;
+    color: black;
+}
+
+footer {
+    padding: 100px;
+}
+
+/* iPhone */
+@media (hover: none) and (pointer: coarse) {
+    h1 {
+        font-size: 100px;
+    }
+    .page_logo {
+        height: 900;
+    }
+    body{
+        padding-top: 0;
+        min-height: 100dvh;
+        background-color: yellow;
+        color: black;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .container button {
+        background-color: black;
+        color: yellow;
+        justify-content: center;
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: bolder;
+        font-size: 50px;
+        padding: 10px 5px;
+        min-width: 300px;
+        min-height: 300px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    footer {
+        font-size: xx-large;
+    }
+}

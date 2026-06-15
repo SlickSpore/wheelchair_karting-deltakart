@@ -14,7 +14,7 @@ BYTES_PER_PIXEL = 4
 FB_HEIGHT = 1920
 FB_WIDTH = 1080
 
-SCREEN_TYPE = cv2.COLOR_GRAY2BGR565
+SCREEN_TYPE = cv2.COLOR_BGR2BGR565
 
 MAX_OUT_BOUNDS = 500
 
@@ -86,10 +86,9 @@ def compute_steering_value(center, headset_center):
     return (1 if val >= 0 else -1) * (abs(val) if abs(val) < 1 else 1)
 
 class KartHeadsetInput:
-    def __init__(self, disp_calib = False, disp_fb = False):
+    def __init__(self, disp_fb = False):
         print("Loading KartHeadsetInput")
         if not "macos" in this_os:
-            disp_calib = False
             import os
             print("Linux Found, Setting Camera...")
             os.system("v4l2-ctl -d /dev/video0 --set-ctrl=auto_exposure=1")
@@ -118,6 +117,7 @@ class KartHeadsetInput:
         corners = 0
 
         print("Waiting For ARUCO")
+
         while not corners:
             frame = self.vs.read()
             if frame is None:
@@ -133,15 +133,15 @@ class KartHeadsetInput:
         self.position = numpy.array([0, 0])
         self.last_position = numpy.array([0, 0])
         
-        # Frame counter to control how frequently ArUco runs
         self.frame_counter = 0
-        self.correction_interval = 20  # Run ArUco correction only every 20 frames (~1.5 times per second)
+        self.correction_interval = 20  
 
         if self.zero_bbox is None:
             exit(-1)
 
         print("Drawing BBox")        
         draw_bbox(frame, self.zero_bbox, type=0)
+        
         print("Drawing Marker")
         cv2.polylines(frame, [pts], True, (0,0,0), 8)
 

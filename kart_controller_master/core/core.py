@@ -12,7 +12,7 @@ warnings.filterwarnings(
     message=".*pkg_resources*"
 )
 import time, datetime, threading, serial,  signal
-import lib.kart_js as ks
+import lib.kart_js as js
 import lib.kart_hs as hs
 from lib.kart import *
 
@@ -28,6 +28,7 @@ k_cfg = Kart_Settings()
 PRECISION = 4
 
 core_running = False
+core_lock = threading.Lock()
 core_command = (0,0,0)
 steering_sensibility_curve = get_curve((75, 100))
 arduino_serial = None
@@ -109,7 +110,8 @@ def serial_worker():
     hello_arduino()
 
     while core_running:
-        x, y, z = core_command
+        with core_lock:
+            x, y, z = core_command
         packet = craft_packet(x, y, z)
 
         try:
@@ -121,6 +123,24 @@ def serial_worker():
 
         print(f"{packet.hex().strip()} -> {'OK!' if packet_is_valid(responce) else 'FAILURE!'}")
         time.sleep(k_cfg.WRITING_SPEED)
+
+def get_speed_with_varispeed(x, speed, bypass_speeds=False):
+
+    low_sens = get_curve((60,100))
+    normal_sens = get_curve((50,75), y_max=150)
+    high_sens = get_curve(y_max=100)
+
+    if bypass_speeds:
+        return apply_curve(normal_sens, x)
+    
+    match speed:
+        case js.NORMAL_SENS:
+            return apply_curve(normal_sens, x)
+        case js.HIGH_SENS:
+            return apply_curve(high_sens, x)
+        case js.LOW_SENS:
+            return apply_curve(low_sens, x)
+
 
 class JOYSTICK_RUN:
     """ Joystick Operating Mode """
@@ -136,10 +156,9 @@ class JOYSTICK_RUN:
             daemon=True
         )
 
-        self.js = ks.KartJoystickInput()
+        self.js = js.KartJoystickInput()
+        
         arduino_serial = attach_arduino()
-
-        self.responce_format = '<ffffH'
 
     def start(self):
         global core_running, core_command
@@ -151,13 +170,15 @@ class JOYSTICK_RUN:
             print("[+] Kart Core Started, You Can Drive!")
             while core_running:
 
+                self.js.get_specified_buttons()
+
                 self.js.trigger_update()
                 self.js.load_current_state(
                     k_cfg.JS_AXES, 
                     k_cfg.JS_DTZN
                 )
 
-                direction, velocity = get_direction_and_speed(self.js.steering_angle, k_cfg.JS_THRESHOLD)
+                direction, velocity = get_speed_with_varispeed(self.js.steering_angle, self.js.steering_precision, bypass_speeds=not k_cfg.JS_BYPASS_VARISPEED)
 
                 core_command = (direction, velocity, 0)
                 time.sleep(k_cfg.READING_SPEED)
@@ -182,18 +203,15 @@ class HEADSET_RUN:
         )
 
         self.headset = hs.KartHeadsetInput(disp_fb=True)
-        #arduino_serial = attach_arduino()
+        arduino_serial = attach_arduino()
 
         self.zero_position = hs.get_center_position(hs.cvt_bb_to_rect(self.headset.zero_bbox), axis=0)
-
-        self.responce_format = '<ffffH'
-
 
     def start(self):
         global core_running, core_command
 
         core_running = True
-        #self.worker.start()
+        self.worker.start()
 
 
         try:

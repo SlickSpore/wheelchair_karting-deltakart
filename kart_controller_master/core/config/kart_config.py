@@ -22,6 +22,7 @@ parser.add_argument("--motor_baseangle")
 parser.add_argument("--js_threshold")
 parser.add_argument("--js_axes")
 parser.add_argument("--js_dtzn")
+parser.add_argument("--js_varispeed")
 parser.add_argument("--hs_dtzn")
 parser.add_argument("--core_mode")
 parser.add_argument("--cam_bbox")
@@ -49,6 +50,7 @@ class Kart_Settings():
         self.MOTOR_MAXANGLE = settings_json["motor_maxangle"]
         self.MOTOR_BASEANGLE = settings_json["motor_baseangle"]
         self.JS_THRESHOLD = settings_json["js_threshold"] 
+        self.JS_BYPASS_VARISPEED = settings_json["js_varispeed"]
         self.JS_AXES = settings_json["js_axes"]      
         self.JS_DTZN = settings_json["js_dtzn"]      
         self.HS_DTZN = settings_json["hs_dtzn"]      
@@ -76,11 +78,12 @@ def generate_defaults():
     global_variables["js_threshold"]    = 25
     global_variables["js_axes"]         = [3,3,3]
     global_variables["js_dtzn"]         = 10
+    global_variables["js_varispeed"]    = 1
     global_variables["hs_dtzn"]         = 10
     global_variables["verbose"]         = False
     global_variables["motor_maxangle"]  = 120
     global_variables["core_mode"]       = "joystick"
-    global_variables["cam_bbox"]       = "(526, 113, 267, 314)"
+    global_variables["cam_bbox"]        = "(526, 113, 267, 314)"
 
     save_changes()
     exit(0)
@@ -107,6 +110,7 @@ if __name__ == "__main__":
             if arg == "js_axes": value = [int(i) for i in value.split(',')]
             if arg == "cam_bbox": value = ast.literal_eval(value)
             if arg == "verbose": value = bool(value.lower()=="true")
+            if arg == "js_varispeed": value = bool(value.lower()=="true")
             try:
                 set(str(arg), int(value))
             except Exception as e:

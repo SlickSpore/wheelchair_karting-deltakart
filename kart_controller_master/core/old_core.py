@@ -12,7 +12,7 @@ warnings.filterwarnings(
     message=".*pkg_resources*"
 )
 import time, datetime, threading, serial, sys, signal
-import lib.kart_js as ks
+import lib.kart_js as js
 import lib.kart_hs as hs
 
 from config.kart_config import *
@@ -78,7 +78,7 @@ class JOYSTICK_RUN:
         print(" *                                      *")
         print("====== Written by Ettore Caccioli =======")
 
-        self.js = ks.KartJoystickInput()
+        self.js = js.KartJoystickInput()
         self.attach_arduino()
 
         terminal_log("|RunTime|=====|X-Accel|========|Y-Accel|=======|G-Accel|=======|CoreTemp|")

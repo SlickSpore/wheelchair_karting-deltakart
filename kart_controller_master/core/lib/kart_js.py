@@ -3,7 +3,7 @@ os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame
 
 JS_SETUP = [2,5,4]
-JS_BUTTONS = [0,1]
+JS_BUTTONS = [1,0]
 JS_DZ = 10
 
 NORMAL_SENS = 0

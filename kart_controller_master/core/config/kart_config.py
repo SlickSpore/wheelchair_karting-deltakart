@@ -23,9 +23,7 @@ parser.add_argument("--js_threshold")
 parser.add_argument("--js_axes")
 parser.add_argument("--js_dtzn")
 parser.add_argument("--js_varispeed")
-parser.add_argument("--hs_dtzn")
 parser.add_argument("--core_mode")
-parser.add_argument("--cam_bbox")
 
 args = parser.parse_args()
 
@@ -53,9 +51,7 @@ class Kart_Settings():
         self.JS_BYPASS_VARISPEED = settings_json["js_varispeed"]
         self.JS_AXES = settings_json["js_axes"]      
         self.JS_DTZN = settings_json["js_dtzn"]      
-        self.HS_DTZN = settings_json["hs_dtzn"]      
         self.VERBOSE = settings_json["verbose"] 
-        self.CAM_BBOX = settings_json["cam_bbox"] 
         self.CORE_MODE = CoreModes.HEADSET if settings_json["core_mode"].lower() == CoreModes.HEADSET.value else CoreModes.JOYSTICK
 
 
@@ -79,7 +75,6 @@ def generate_defaults():
     global_variables["js_axes"]         = [3,3,3]
     global_variables["js_dtzn"]         = 10
     global_variables["js_varispeed"]    = 1
-    global_variables["hs_dtzn"]         = 10
     global_variables["verbose"]         = False
     global_variables["motor_maxangle"]  = 120
     global_variables["core_mode"]       = "joystick"
@@ -108,7 +103,6 @@ if __name__ == "__main__":
     for arg, value in vars(args).items():
         if value is not None:
             if arg == "js_axes": value = [int(i) for i in value.split(',')]
-            if arg == "cam_bbox": value = ast.literal_eval(value)
             if arg == "verbose": value = bool(value.lower()=="true")
             if arg == "js_varispeed": value = bool(value.lower()=="true")
             try:

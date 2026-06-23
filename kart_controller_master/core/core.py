@@ -30,7 +30,6 @@ PRECISION = 4
 core_running = False
 core_lock = threading.Lock()
 core_command = (0,0,0)
-steering_sensibility_curve = get_curve((75, 100))
 arduino_serial = None
 
 def get_direction_and_speed(x, death_zone):
@@ -119,9 +118,11 @@ def serial_worker():
             arduino_serial.write(packet)
             responce = arduino_serial.readline() #.hex().strip()
         except Exception as e:
-            print(f"CONNECTION FAILURE - [{e}], Proceding with LOOP -> {responce}")
+            if k_cfg.VERBOSE:
+                print(f"CONNECTION FAILURE - [{e}], Proceding with LOOP -> {responce}")
 
-        print(f"{packet.hex().strip()} -> {'OK!' if packet_is_valid(responce) else 'FAILURE!'}")
+        if k_cfg.VERBOSE:
+            print(f"{packet.hex().strip()} -> {'OK!' if packet_is_valid(responce) else 'FAILURE!'}")
         time.sleep(k_cfg.WRITING_SPEED)
 
 def get_speed_with_varispeed(x, speed, bypass_speeds=False):
@@ -203,39 +204,28 @@ class HEADSET_RUN:
         )
 
         self.headset = hs.KartHeadsetInput(disp_fb=True)
-        arduino_serial = attach_arduino()
-
-        self.zero_position = hs.get_center_position(hs.cvt_bb_to_rect(self.headset.zero_bbox), axis=0)
+        #arduino_serial = attach_arduino()
 
     def start(self):
         global core_running, core_command
 
+        headset_sens_curve = get_curve((30, 50))
         core_running = True
-        self.worker.start()
-
+        
+        #self.worker.start()
 
         try:
             print("[+] Kart Core Started, You Can Drive!")
 
-            while core_running:
+            for input_value in self.headset.yield_hs_position():
+                if not core_running:
+                    break
 
-                frame, headset_bbox, headset_center = self.headset.get_head_position()
-
-                if headset_bbox == -1: 
-                    continue
-
-                input_value = hs.compute_steering_value(self.zero_position, headset_center)*100
-
-                if self.headset.show_frame(frame):
-                    hs.cv2.imshow("headset", frame)
-                    if hs.cv2.waitKey(1) == 27:
-                        break
-
-                direction, velocity = apply_curve(steering_sensibility_curve, input_value)
+                direction, velocity = apply_curve(headset_sens_curve, input_value)
 
                 core_command = (direction, velocity, 0)
                 
-                print(core_command)
+                print(input_value, direction, velocity, core_command)
 
         except KeyboardInterrupt:
             self.headset.stop_driving()

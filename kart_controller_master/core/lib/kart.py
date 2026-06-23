@@ -40,9 +40,9 @@ def apply_curve(curve: tuple[tuple[float, float], tuple[float, float, float]], X
     a1, b, x_max2 = seg2
 
     if abs(X) <= x_max1:
-        return -1  if X < 0 else 1, int(min(round(a*(abs(X)**2), PRECISION),255))
+        return 0  if X < 0 else 1, int(min(round(a*(abs(X)**2), PRECISION),255))
     elif abs(X) <= x_max2:
-        return -1  if X < 0 else 1, int(min(round(a1*(abs(X)**2) + b*abs(X), PRECISION),255))
+        return 0  if X < 0 else 1, int(min(round(a1*(abs(X)**2) + b*abs(X), PRECISION),255))
 
 def handler(sig, frame):
     print("SIGTERM_QUIT!")

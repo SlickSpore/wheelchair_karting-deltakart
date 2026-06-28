@@ -19,7 +19,7 @@
   "verbose": false,
   "motor_maxangle": 255,
   "generate_defaults": 0,
-  "core_mode": "headset",
+  "core_mode": "joystick",
   "motor_baseangle": 10,
   "cam_bbox": [
     526,
@@ -27,5 +27,6 @@
     267,
     314
   ],
-  "js_varispeed": 1
+  "js_varispeed": 1,
+  "js_id": 0
 }

@@ -150,7 +150,7 @@ def core_start():
         )
 
     runner = subprocess.Popen(
-        ["python3", PYTHON_CORE],
+        ["sudo", "-u", "kart1", "python3", PYTHON_CORE],
         stderr=subprocess.PIPE,
         text=True
     )
@@ -186,7 +186,7 @@ def status():
             return jsonify(
                 {
                 "kart_status"    :"error",
-                "web_message"    :"Joystick Error! Check Connections."
+                "web_message"    :"Input Error! Check Connections."
                 }
             )
         case StatusCodes.SERIAL_HAS_FAILED:

@@ -4,5 +4,6 @@
 4 - roi
 5 - joystick curves
 
+6 - check settings and project structure for unused
 
 system image backup

@@ -110,7 +110,7 @@ def compute_distance(bbox, head_bbox):
     return bb_c - hs_c
 
 
-def compute_steering_value(center, headset_center, max_bounds=200):
+def compute_steering_value(center, headset_center, max_bounds=40):
     val = headset_center[0]/max_bounds
     return round((-100 if val <= 0 else 100) * (abs(val) if abs(val) < 1 else 1), 2)
 
@@ -142,7 +142,7 @@ def apply_logo(img, logo):
 
 
 class KartHeadsetInput:
-    def __init__(self, disp_fb=False):
+    def __init__(self, cam_ex=50, disp_fb=False):
         self.lock = threading.Lock()
         self.__running = True
         
@@ -150,6 +150,7 @@ class KartHeadsetInput:
         self.frame_gray = None
         self.tracker_lost = False
         self.speed = 0
+        self.cam_ex = cam_ex
         
         self.current_hs_center = collections.deque(maxlen=10)
         self.detector = kart_ARUCO_init()
@@ -158,8 +159,8 @@ class KartHeadsetInput:
         
         self.tracker = collections.deque(maxlen=10)
         self.tracker.append(cv2.legacy.TrackerMOSSE_create())
-        
-        self.max_bounds = 350
+
+        self.max_bounds = 150
         self.video_width, self.video_height = 1920, 1080
         self.fb_w, self.fb_h = self.video_width, self.video_height
         self.disp_fb = disp_fb
@@ -171,7 +172,7 @@ class KartHeadsetInput:
         if not IS_MACOS:
             print("Linux Found, Setting Camera...")
             os.system("v4l2-ctl -d /dev/video0 --set-ctrl=auto_exposure=1")
-            os.system("v4l2-ctl -d /dev/video0 --set-ctrl=exposure_time_absolute=50")
+            os.system(f"v4l2-ctl -d /dev/video0 --set-ctrl=exposure_time_absolute={self.cam_ex}")
             print("Initializing Frame Buffer...")
             self.frame_buffer_handle, self.frame_buffer, self.fb_w, self.fb_h = get_frame_buffer(2)
             self.video_width, self.video_height = 1280, 720
@@ -235,8 +236,9 @@ class KartHeadsetInput:
                     corners_list, _, _ = self.detector.detectMarkers(img_to_process)
                     if len(corners_list) > 0:
                         marker_corners = corners_list[0].astype(numpy.int32)
-                        
-                        if current_speed < 0.01 or is_lost:
+
+                        if (current_speed < 0.1 and abs(self.position[0]) < 10) or is_lost:
+                            print("Resetting position:", self.position[0], current_speed, is_lost)
                             if gray_to_process is not None:
                                 new_tracker = cv2.legacy.TrackerMOSSE_create()
                                 new_bbox = get_headset_bb_from_marker(marker_corners, self.video_height)
@@ -315,7 +317,7 @@ class KartHeadsetInput:
                     else:
                         if self.frame_buffer is not None:
                             self.frame_buffer.seek(0)
-                            resized = resize_with_pad(ui_img, target_width=self.fb_w, target_height=self.fb_h)
+                            resized = resize_with_pad(ui_img)
                             self.frame_buffer.write(cv2.cvtColor(resized, SCREEN_TYPE).tobytes())
 
                 self.time_previous = time_now

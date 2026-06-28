@@ -63,7 +63,7 @@ def twos_complement(val, bits) -> int:
 if __name__ == "__main__":
     power_mode = get_curve((60,100))
     normal_mode = get_curve((50,75), y_max=150)
-    precision_mode = get_curve(y_max=100)
+    precision_mode = get_curve((10,40), y_max=120)
 
     print([apply_curve(precision_mode, i) for i in range(-100, 100)])
 

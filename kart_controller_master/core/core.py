@@ -129,7 +129,7 @@ def get_speed_with_varispeed(x, speed, bypass_speeds=False):
 
     low_sens = get_curve((60,100))
     normal_sens = get_curve((50,75), y_max=150)
-    high_sens = get_curve(y_max=100)
+    high_sens = get_curve((10,40), y_max=120)
 
     if bypass_speeds:
         return apply_curve(normal_sens, x)
@@ -157,7 +157,8 @@ class JOYSTICK_RUN:
             daemon=True
         )
 
-        self.js = js.KartJoystickInput()
+        print(k_cfg.JS_ID)
+        self.js = js.KartJoystickInput(k_cfg.JS_ID)
         
         arduino_serial = attach_arduino()
 
@@ -203,7 +204,7 @@ class HEADSET_RUN:
             daemon=True
         )
 
-        self.headset = hs.KartHeadsetInput(disp_fb=True)
+        self.headset = hs.KartHeadsetInput(k_cfg.CAM_MAX_S, disp_fb=True)
         #arduino_serial = attach_arduino()
 
     def start(self):

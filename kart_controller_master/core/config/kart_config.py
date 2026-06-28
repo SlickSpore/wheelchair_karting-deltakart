@@ -1,4 +1,4 @@
-import json, argparse, os, ast
+import json, argparse, os
 from enum import Enum
 
 
@@ -19,11 +19,12 @@ parser.add_argument("--motor_left")
 parser.add_argument("--motor_right")
 parser.add_argument("--motor_maxangle")
 parser.add_argument("--motor_baseangle")
-parser.add_argument("--js_threshold")
+parser.add_argument("--js_id")
 parser.add_argument("--js_axes")
 parser.add_argument("--js_dtzn")
 parser.add_argument("--js_varispeed")
 parser.add_argument("--core_mode")
+parser.add_argument("--cam_max_s")
 
 args = parser.parse_args()
 
@@ -47,11 +48,12 @@ class Kart_Settings():
         self.MOTOR_RIGHT = settings_json["motor_right"]  
         self.MOTOR_MAXANGLE = settings_json["motor_maxangle"]
         self.MOTOR_BASEANGLE = settings_json["motor_baseangle"]
-        self.JS_THRESHOLD = settings_json["js_threshold"] 
+        self.JS_ID = settings_json["js_id"]
         self.JS_BYPASS_VARISPEED = settings_json["js_varispeed"]
         self.JS_AXES = settings_json["js_axes"]      
         self.JS_DTZN = settings_json["js_dtzn"]      
         self.VERBOSE = settings_json["verbose"] 
+        self.CAM_MAX_S = settings_json["cam_max_s"] 
         self.CORE_MODE = CoreModes.HEADSET if settings_json["core_mode"].lower() == CoreModes.HEADSET.value else CoreModes.JOYSTICK
 
 
@@ -71,12 +73,13 @@ def generate_defaults():
     global_variables["motor_left"]      = 1
     global_variables["motor_right"]     = 0
     global_variables["motor_baseangle"] = 30
-    global_variables["js_threshold"]    = 25
+    global_variables["js_id"]           = 0
     global_variables["js_axes"]         = [3,3,3]
     global_variables["js_dtzn"]         = 10
     global_variables["js_varispeed"]    = 1
     global_variables["verbose"]         = False
     global_variables["motor_maxangle"]  = 120
+    global_variables["cam_max_s"]       = 20
     global_variables["core_mode"]       = "joystick"
     global_variables["cam_bbox"]        = "(526, 113, 267, 314)"
 

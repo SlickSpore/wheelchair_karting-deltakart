@@ -111,6 +111,12 @@ class KartHeadset:
         else:
             return -1
         
+    def get_quaternion_data(self, precision=2):
+        if self.ptype is PacketDataTypes.QTR_DATA:
+            return self.data
+        else:
+            return -1
+        
     def smooth_acc_data(self, amount, precision=2):
         x, y, z = self.data
         self.data_frames.append([x, y, z])
@@ -164,7 +170,6 @@ imu2_mag_data = queue.Queue()
 running = True
 
 hs1 = KartHeadset("/dev/tty.usbserial-11210")
-hs2 = KartHeadset("/dev/tty.usbserial-1130")
 
 madg = Madgwick()
 
@@ -177,15 +182,6 @@ def imu_1_run():
             imu1_acc_data.put(hs1.get_accelerometer_data())
             imu1_gyro_data.put(hs1.get_gyroscope_data())
             imu1_mag_data.put(hs1.get_magnetometer_data())
-
-def imu_2_run():
-    global a2x, a2y, a2z
-    while running:
-        hs2.update()
-        if hs2.ptype is PacketDataTypes.AGM_DATA:
-            imu2_acc_data.put(hs2.get_accelerometer_data())
-            imu2_gyro_data.put(hs2.get_gyroscope_data())
-            imu2_mag_data.put(hs2.get_magnetometer_data())
 
 def update_quaternion(acc, gyro, mag):
     global q
@@ -202,10 +198,8 @@ def update_quaternion(acc, gyro, mag):
 if __name__ == "__main__":
     
     imu1 = threading.Thread(target=imu_1_run, daemon=True)
-    imu2 = threading.Thread(target=imu_2_run, daemon=True)
 
     imu1.start()
-    imu2.start()
 
     alpha = 0.95
 
@@ -216,26 +210,13 @@ if __name__ == "__main__":
 
     try:
         while True:
-            m = imu1_mag_data.get()
-            a = imu1_acc_data.get()
-            g = np.deg2rad(imu1_gyro_data.get())
-
-            roll_acc = np.arctan2(a[1], a[2])
-            pitch_acc = np.arctan2(-a[0], np.sqrt(a[1]*a[1] + a[2]*a[2]))
-            
-            roll += g[0] * dt
-            pitch += g[1] * dt
-
-            roll = alpha * roll + (1 - alpha) * roll_acc
-            pitch = alpha * pitch + (1 - alpha) * pitch_acc
-
-            print(-round(np.rad2deg(roll)/26*90,2))
+            quaternion = hs1.get_quaternion_data()
+            if quaternion != -1:
+                print(quaternion)
 
     except KeyboardInterrupt:
         running = False
 
         imu1.join()
-        imu2.join()
 
-        hs1.close()
         hs1.close()

@@ -14,6 +14,7 @@ warnings.filterwarnings(
 import time, datetime, threading, serial,  signal
 import lib.kart_js as js
 import lib.kart_hs as hs
+import lib.quaternion_test as hs1
 from lib.kart import *
 
 from config.kart_config import Kart_Settings, CoreModes
@@ -190,7 +191,7 @@ class JOYSTICK_RUN:
             self.worker.join()
             arduino_serial.close()
 
-class HEADSET_RUN:
+class __HEADSET_RUN:
     """ Headset Operating Mode """
 
     def __init__(self):
@@ -230,6 +231,47 @@ class HEADSET_RUN:
 
         except KeyboardInterrupt:
             self.headset.stop_driving()
+            core_running = False
+            self.worker.join()
+            arduino_serial.close()
+
+class HEADSET_RUN:
+    def __init__(self):
+        global core_running, core_command, arduino_serial
+
+        core_command = (0,0,0)
+        core_running = False
+
+        self.worker = threading.Thread(
+            target=serial_worker, 
+            daemon=True
+        )
+
+        arduino_serial = attach_arduino()
+
+        self.headset = hs1.KartHeadsetInput2(k_cfg.WRITING_SPEED)
+    
+    def start(self):
+        global core_running, core_command
+
+        headset_sens_curve = get_curve((30, 50))
+        core_running = True
+        
+        self.worker.start()
+
+        try:
+            while True:
+                q, k = self.headset.get_headset_postition()
+
+                print(q, k)
+
+                direction, velocity = apply_curve(headset_sens_curve, k)
+
+                core_command = (direction, velocity, 0)
+
+                time.sleep(k_cfg.WRITING_SPEED)
+
+        except KeyboardInterrupt:
             core_running = False
             self.worker.join()
             arduino_serial.close()

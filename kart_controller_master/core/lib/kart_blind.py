@@ -68,7 +68,7 @@ def test_audio_indications():
     try: 
         while True:
             js.trigger_update()
-            js.load_current_state(k_js.JS_SETUP, 1)
+            js.load_current_state([2,2,2], 1)
 
             steering = js.steering_angle if js.steering_angle != 0 else 10
             
@@ -121,7 +121,7 @@ def test_track():
     try: 
         for i in positions:
             js.trigger_update()
-            js.load_current_state(k_js.JS_SETUP, k_js.JS_DZ)
+            js.load_current_state([0,0,0], k_js.JS_DZ)
 
             steer_difference = js.steering_angle - i
             

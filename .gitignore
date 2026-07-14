@@ -4,6 +4,14 @@ todo.pages
 kart_controller_master/core/lib/old/
 kart_controller_master/core/old_core.py
 
+# File di sistema macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Impostazioni locali di VS Code
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -1,0 +1,50 @@
+<!-- New Version of Index.html for kart control ©2026 -->
+<!DOCTYPE html>
+<html>
+    <link rel="stylesheet" href="{{url_for('static', filename='newstyle.css')}}">
+    <head>
+        <title>DeltaKart Web Controller</title>
+        <link rel="icon" href="{{url_for('static', filename='favicon.jpg')}}" type="image/x-icon" class="favicon">
+    </head>
+    
+    <img src="{{url_for('static', filename='logo.jpg')}}" class="page_logo">
+    <h1 id="status_bar">DeltaKart Web Controller</h1>
+    <body>
+        <div class="container">
+        <table>
+            <tr>
+                <td>
+                    <button class="start_btn" onclick=start() title="Enables the selected driving mode">Start</button>
+                </td>
+                <td>
+                    <button class="stop_btn" onclick=stop() title="Stops the gokart ">Stop</button>
+                </td>
+                <td>
+                    <a href="{{url_for('new_config')}}">
+                        <button class="config_btn" onclick="submit">Configure</button>
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a href="{{url_for('new_camera')}}">
+                        <button class="camera_btn" onclick="submit">Camera</button>
+                    </a>
+                </td>
+                <td>
+                    <a href="{{url_for('camera')}}">
+                      <button class="joystick_btn" >Joystick</button>
+                    </a>
+                </td>
+                <td>
+                    <button class="quit_btn" onclick=shutdown()>Shutdown</button>
+                </td>
+            </tr>
+        </table>
+        </div>
+        <script src="{{url_for('static', filename='script.js')}}"></script>
+    </body>
+    <footer>
+        © 2026 Wheelchair Karting
+    </footer>
+</html>

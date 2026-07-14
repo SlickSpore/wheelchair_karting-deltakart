@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!-- Written By Ettore Caccioli, 29/04/2026 © Wheelchair Karting -->
+<html>
+    <link rel="stylesheet" href="{{url_for('static', filename='styles.css')}}">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>DeltaKart Web Controller</title>
+        <link rel="icon" href="{{url_for('static', filename='favicon.jpg')}}" type="image/x-icon" class="favicon">
+    </head>
+    <body>
+
+        <a href="{{url_for('index')}}">
+            <img src="{{url_for('static', filename='logo.jpg')}}" class="page_logo">
+        </a>
+        <h1 id="status_bar">Kart Driving Preset Selection</h1>
+        <div class="container">
+            <button class="preset_but_1" onclick="fetch_preset('preset_1','1')" id="p_1">Preset 1</button>
+            <button class="preset_but_2" onclick="fetch_preset('preset_2','2')" id="p_2">Preset 2</button>
+            <button class="preset_but_3" onclick="fetch_preset('preset_3','3')" id="p_3">Preset 3</button>
+            <button class="preset_but_4" onclick="fetch_preset('preset_4','4')" id="p_4">Preset 4</button>
+            <button class="preset_but_5" onclick="fetch_preset('preset_5','5')" id="p_5">Preset 5</button>
+        </div>
+        <div class="container">
+            <button class="preset_but_1" onclick="fetch_preset('preset_6','6')" id="p_6">Preset 6</button>
+            <button class="preset_but_2" onclick="fetch_preset('preset_7','7')" id="p_7">Preset 7</button>
+            <button class="preset_but_3" onclick="fetch_preset('preset_8','8')" id="p_8">Preset 8</button>
+            <button class="preset_but_4" onclick="fetch_preset('preset_9','9')" id="p_9">Preset 9</button>
+            <button class="preset_but_5" onclick="fetch_preset('preset_10','10')" id="p_10">Preset 10</button>
+        </div>
+
+        <script>
+            fetch("{{url_for('preset_names')}}").then(res => res.json()).then(data => {
+                document.getElementById("p_1").innerText = data.preset_1.visible_name
+                document.getElementById("p_2").innerText = data.preset_2.visible_name
+                document.getElementById("p_3").innerText = data.preset_3.visible_name
+                document.getElementById("p_4").innerText = data.preset_4.visible_name
+                document.getElementById("p_5").innerText = data.preset_5.visible_name
+                document.getElementById("p_6").innerText = data.preset_6.visible_name
+                document.getElementById("p_7").innerText = data.preset_7.visible_name
+                document.getElementById("p_8").innerText = data.preset_8.visible_name
+                document.getElementById("p_9").innerText = data.preset_9.visible_name
+                document.getElementById("p_10").innerText = data.preset_10.visible_name
+            })
+        </script>
+
+        <script src="{{url_for('static', filename='script.js')}}"></script>
+    </body>
+    <footer>
+        To edit presets refer to IT - © 2026 Wheelchair Karting
+    </footer>
+</html>

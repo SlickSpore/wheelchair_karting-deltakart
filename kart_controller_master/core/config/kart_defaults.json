@@ -1,0 +1,33 @@
+{
+  "baud_rate": 115200,
+  "serial_port": "/dev/tty.usbserial-21210",
+  "reading_speed": 0.005,
+  "writing_speed": 0.005,
+  "packet_header": 17733,
+  "packet_footer": 17990,
+  "packet_ok": "47470a",
+  "motor_halt": 0,
+  "motor_left": 1,
+  "motor_right": 0,
+  "js_threshold": 25,
+  "js_axes": [
+    3,
+    3,
+    3
+  ],
+  "js_dtzn": 1,
+  "verbose": false,
+  "motor_maxangle": 255,
+  "generate_defaults": 0,
+  "core_mode": "headset",
+  "motor_baseangle": 10,
+  "cam_bbox": [
+    526,
+    113,
+    267,
+    314
+  ],
+  "cam_max_s": 20,
+  "js_varispeed": 1,
+  "js_id": 0
+}

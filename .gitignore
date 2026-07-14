@@ -1,8 +1,8 @@
-/manual.pages
-/presentazione.pages
-/todo.pages
-/kart_controller_master/core/lib/old/
-/kart_controller_master/core/old_core.py
+manual.pages
+presentazione.pages
+todo.txt
+kart_controller_master/core/lib/old/
+kart_controller_master/core/old_core.py
 
 # File di sistema macOS
 .DS_Store

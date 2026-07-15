@@ -13,11 +13,11 @@ warnings.filterwarnings(
 )
 import time, datetime, threading, serial,  signal
 import lib.kart_js as js
-import lib.kart_hs as hs
-import lib.quaternion_test as hs1
+import lib.kart_hs as hs1
+import lib.old.kart_hs as hs
 from lib.kart import *
 
-from config.kart_config import Kart_Settings, CoreModes
+from config.kart_config import Kart_Settings, CoreModes, OS
 
 # ================== # 
 
@@ -61,6 +61,10 @@ def attach_arduino():
     Errors: Raises Fatal Error -2 if no connection is available.
     The webpage procedes to report the error to the user.
     """
+
+    if OS == "macos":
+        return
+
     try:
         return serial.Serial(
             k_cfg.SERIAL_PORT, 
@@ -90,7 +94,9 @@ def hello_arduino():
 
 def serial_worker():
     """
-    Description: This routine estableshes a connection between 
+    Description:
+    ------------
+    This routine estableshes a connection between 
     the arduino slave and the computer core with
     a countinous serial stream running via thread.
 
@@ -102,11 +108,16 @@ def serial_worker():
                 [z]         : 0x0000
                 [FOOTER]    : 0x470a
 
-    Errors: In case of error, reconnection is attempted by keeping
+    Errors:
+    -------
+    In case of error, reconnection is attempted by keeping
     the serial open waiting for arduino's User Reset Interrupt
     or a spontanous one.
     """
 
+    if OS == "macos":
+        return
+    
     hello_arduino()
 
     while core_running:
@@ -191,7 +202,7 @@ class JOYSTICK_RUN:
             self.worker.join()
             arduino_serial.close()
 
-class __HEADSET_RUN:
+class _CAMERA_HEADSET_RUN:
     """ Headset Operating Mode """
 
     def __init__(self):
@@ -249,7 +260,7 @@ class HEADSET_RUN:
 
         arduino_serial = attach_arduino()
 
-        self.headset = hs1.KartHeadsetInput2(k_cfg.WRITING_SPEED)
+        self.headset = hs1.KartHeadsetInput(k_cfg.WRITING_SPEED)
     
     def start(self):
         global core_running, core_command
@@ -260,13 +271,9 @@ class HEADSET_RUN:
         self.worker.start()
 
         try:
-            while True:
-                q, k = self.headset.get_headset_postition()
+            for roll in self.headset.get_headset_position():
 
-                print(q, k)
-
-                direction, velocity = apply_curve(headset_sens_curve, k)
-
+                direction, velocity = apply_curve(headset_sens_curve, roll)
                 core_command = (direction, velocity, 0)
 
                 time.sleep(k_cfg.WRITING_SPEED)

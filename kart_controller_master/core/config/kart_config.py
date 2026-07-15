@@ -1,6 +1,8 @@
 import json, argparse, os
 from enum import Enum
+import platform
 
+OS = "macos" if "macos" in platform.platform(terse=True).lower() else "linux"
 
 global_variables = {}
 FNAME = "core/config/kart_defaults.json"

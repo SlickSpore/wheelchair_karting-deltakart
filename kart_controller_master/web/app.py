@@ -1,7 +1,7 @@
 from flask import render_template, Flask, jsonify, request, Response
 import subprocess, threading, enum, json
 import core.lib.kart_status as k_s
-import core.lib.kart_hs as hs
+import kart_controller_master.core.lib.old.kart_hs as hs
 
 
 """

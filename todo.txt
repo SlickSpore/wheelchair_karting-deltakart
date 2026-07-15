@@ -1,9 +1,0 @@
-1 - bug led arduino sul driver che rimane in tensione fino a reset... probabile errore chiusura arduino.
-2 - aggiungere camera calibration capability
-3 - raddrizzare il fiducial
-4 - roi
-5 - joystick curves
-
-6 - check settings and project structure for unused
-
-system image backup

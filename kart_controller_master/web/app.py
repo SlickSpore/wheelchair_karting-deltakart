@@ -1,7 +1,6 @@
 from flask import render_template, Flask, jsonify, request, Response
 import subprocess, threading, enum, json
 import core.lib.kart_status as k_s
-import kart_controller_master.core.lib.old.kart_hs as hs
 
 
 """
@@ -50,6 +49,7 @@ def core_config(args):
     subprocess.Popen((["python3", PYTHON_CORE_CONFIG] + args))
 
 def read_video_stream():    
+    import core.lib.old.kart_hs as hs
     cap = hs.cv2.VideoCapture(0, hs.cv2.CAP_V4L2)
 
     cap.set(hs.cv2.CAP_PROP_FOURCC, hs.cv2.VideoWriter_fourcc(*'MJPG'))

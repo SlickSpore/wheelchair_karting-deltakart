@@ -27,15 +27,15 @@
         ]
     },
     "preset_5":{
-        "visible_name":"CamEx:50",
+        "visible_name":"CamEx:100",
         "args": [
-            "--cam_max_s=40"
+            "--cam_max_s=100"
         ]
     },
     "preset_6":{
-        "visible_name":"CamEx:20",
+        "visible_name":"CamEx:50",
         "args": [
-            "--cam_max_s=10"
+            "--cam_max_s=50"
         ]
     },
     "preset_7":{

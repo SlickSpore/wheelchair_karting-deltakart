@@ -1,8 +1,8 @@
 from collections import deque
 import math
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+# import pandas as pd
 from scipy.signal import butter
 import time
 import lib.YbImuLib as yb
@@ -102,8 +102,8 @@ class KartHeadsetInput:
         self.max_bounds = range
         self.min_bounds = floor
 
-        (self.gx_bias_headset, _, _), self.headset_imu = init_sensor("/dev/tty.usbserial-1210")
-        (self.gx_bias_frame, _, _), self.frame_imu = init_sensor("/dev/tty.usbserial-130")
+        (self.gx_bias_headset, _, _), self.headset_imu = init_sensor("/dev/ttyUSB2")
+        (self.gx_bias_frame, _, _), self.frame_imu = init_sensor("/dev/ttyUSB1")
 
         self.headset_roll_filter = RTButterFilter(generate_filter(cutoff=cutoff_filter_freq))
         self.frame_roll_filter = RTButterFilter(generate_filter(cutoff=cutoff_filter_freq))
@@ -131,7 +131,7 @@ class KartHeadsetInput:
 
                 final_roll = math.degrees(filtered_frame_roll-filtered_headset_roll)
 
-                yield (
+                yield round((
                     max(
                         self.min_bounds,
                         min(
@@ -144,90 +144,90 @@ class KartHeadsetInput:
                             )
                         )
                     ) - self.min_bounds
-                ) / self.max_bounds * 100 * (-1 if final_roll < 0 else 1)
+                ) / self.max_bounds * 100 * (-1 if final_roll > 0 else 1), self.precision)
         except KeyboardInterrupt:
             print("Quitting!")
             return
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     
-    hs = KartHeadsetInput()
+#     hs = KartHeadsetInput()
     
-    for roll in hs.get_headset_position():
-        print(roll)
-        time.sleep((1/GLOBAL_FREQUENCY))
+#     for roll in hs.get_headset_position():
+#         print(roll)
+#         time.sleep((1/GLOBAL_FREQUENCY))
 
-    exit(-1)
-    df = pd.read_csv("data/frame_imu_recording_4curve.csv")
+#     exit(-1)
+#     df = pd.read_csv("data/frame_imu_recording_4curve.csv")
 
-    gyro_x = df["gyro_x"].to_numpy()
-    acc_y = df["acc_y"].to_numpy()
-    acc_z = df["acc_z"].to_numpy()
+#     gyro_x = df["gyro_x"].to_numpy()
+#     acc_y = df["acc_y"].to_numpy()
+#     acc_z = df["acc_z"].to_numpy()
 
-    roll_filter = RTButterFilter(generate_filter(cutoff=GLOBAL_FILTER))
+#     roll_filter = RTButterFilter(generate_filter(cutoff=GLOBAL_FILTER))
 
-    estimator = ComplementaryRoll(alpha=0.98)
+#     estimator = ComplementaryRoll(alpha=0.98)
 
-    roll_estimated = []
-    roll_acc = []
-    roll_gyro = []
+#     roll_estimated = []
+#     roll_acc = []
+#     roll_gyro = []
 
-    gyro_only = 0.0
+#     gyro_only = 0.0
 
-    for gx, ay, az in zip(gyro_x, acc_y, acc_z):
+#     for gx, ay, az in zip(gyro_x, acc_y, acc_z):
 
-        if GYRO_IN_DEGREES:
-            gyro = math.radians(gx)
+#         if GYRO_IN_DEGREES:
+#             gyro = math.radians(gx)
 
-        gyro_only += gx * DT
+#         gyro_only += gx * DT
 
-        roll, acc_roll = estimator.update(gx, ay, az)
+#         roll, acc_roll = estimator.update(gx, ay, az)
 
-        roll_filtered = roll_filter.update(roll)
+#         roll_filtered = roll_filter.update(roll)
 
-        roll_estimated.append(math.degrees(roll_filtered))
-        roll_acc.append(math.degrees(acc_roll))
-        roll_gyro.append(math.degrees(gyro_only))
+#         roll_estimated.append(math.degrees(roll_filtered))
+#         roll_acc.append(math.degrees(acc_roll))
+#         roll_gyro.append(math.degrees(gyro_only))
 
-    df = pd.read_csv("data/headset_imu_recording_4curve.csv")
+#     df = pd.read_csv("data/headset_imu_recording_4curve.csv")
 
-    gyro_x = df["gyro_x"].to_numpy()
-    acc_y = df["acc_y"].to_numpy()
-    acc_z = df["acc_z"].to_numpy()
+#     gyro_x = df["gyro_x"].to_numpy()
+#     acc_y = df["acc_y"].to_numpy()
+#     acc_z = df["acc_z"].to_numpy()
 
-    roll_filter = RTButterFilter(generate_filter(cutoff=GLOBAL_FILTER))
+#     roll_filter = RTButterFilter(generate_filter(cutoff=GLOBAL_FILTER))
 
-    estimator = ComplementaryRoll(alpha=0.98)
+#     estimator = ComplementaryRoll(alpha=0.98)
 
-    roll_estimated1 = []
-    roll_acc1 = []
-    roll_gyro1 = []
+#     roll_estimated1 = []
+#     roll_acc1 = []
+#     roll_gyro1 = []
 
-    gyro_only = 0.0
+#     gyro_only = 0.0
 
-    for gx, ay, az in zip(gyro_x, acc_y, acc_z):
+#     for gx, ay, az in zip(gyro_x, acc_y, acc_z):
 
-        if GYRO_IN_DEGREES:
-            gyro = math.radians(gx)
+#         if GYRO_IN_DEGREES:
+#             gyro = math.radians(gx)
 
-        gyro_only += gx * DT
+#         gyro_only += gx * DT
 
-        roll, acc_roll = estimator.update(gx, ay, az)
+#         roll, acc_roll = estimator.update(gx, ay, az)
 
-        roll_filtered = roll_filter.update(roll)
+#         roll_filtered = roll_filter.update(roll)
 
-        roll_estimated1.append(math.degrees(roll_filtered))
-        roll_acc1.append(math.degrees(acc_roll))
-        roll_gyro1.append(math.degrees(gyro_only))
+#         roll_estimated1.append(math.degrees(roll_filtered))
+#         roll_acc1.append(math.degrees(acc_roll))
+#         roll_gyro1.append(math.degrees(gyro_only))
 
-    plt.figure(figsize=(12,6))
-    plt.plot(roll_estimated, label="Headset Complementary Filter", linewidth=2, alpha=.4)
-    plt.plot(roll_estimated1, label="Frame Complementary Filter", linewidth=2, alpha=.4)
-    plt.plot(-np.array(roll_estimated)+np.array(roll_estimated1[:-6]), label="Combined Telemetry", linewidth=2)
-    plt.xlabel("Campione")
-    plt.ylabel("Roll [°]")
-    plt.title("Stima del Roll")
-    plt.title("Headset Angle View")
-    plt.grid(True)
-    plt.legend()
-    plt.show()
+#     plt.figure(figsize=(12,6))
+#     plt.plot(roll_estimated, label="Headset Complementary Filter", linewidth=2, alpha=.4)
+#     plt.plot(roll_estimated1, label="Frame Complementary Filter", linewidth=2, alpha=.4)
+#     plt.plot(-np.array(roll_estimated)+np.array(roll_estimated1[:-6]), label="Combined Telemetry", linewidth=2)
+#     plt.xlabel("Campione")
+#     plt.ylabel("Roll [°]")
+#     plt.title("Stima del Roll")
+#     plt.title("Headset Angle View")
+#     plt.grid(True)
+#     plt.legend()
+#     plt.show()

@@ -202,7 +202,7 @@ class JOYSTICK_RUN:
             self.worker.join()
             arduino_serial.close()
 
-class _CAMERA_HEADSET_RUN:
+class CAMERA_RUN:
     """ Headset Operating Mode """
 
     def __init__(self):
@@ -216,8 +216,10 @@ class _CAMERA_HEADSET_RUN:
             daemon=True
         )
 
+        print("started")
+
         self.headset = hs.KartHeadsetInput(k_cfg.CAM_MAX_S, disp_fb=True)
-        #arduino_serial = attach_arduino()
+        # arduino_serial = attach_arduino()
 
     def start(self):
         global core_running, core_command
@@ -225,7 +227,7 @@ class _CAMERA_HEADSET_RUN:
         headset_sens_curve = get_curve((30, 50))
         core_running = True
         
-        #self.worker.start()
+        # self.worker.start()
 
         try:
             print("[+] Kart Core Started, You Can Drive!")
@@ -276,6 +278,8 @@ class HEADSET_RUN:
                 direction, velocity = apply_curve(headset_sens_curve, roll)
                 core_command = (direction, velocity, 0)
 
+                print(roll)
+
                 time.sleep(k_cfg.WRITING_SPEED)
 
         except KeyboardInterrupt:
@@ -293,5 +297,9 @@ if __name__ == "__main__":
             debug.start()
         case CoreModes.HEADSET:
             debug = HEADSET_RUN()
+            signal.signal(signal.SIGTERM, handler)
+            debug.start()
+        case CoreModes.CAMERA:
+            debug = CAMERA_RUN()
             signal.signal(signal.SIGTERM, handler)
             debug.start()

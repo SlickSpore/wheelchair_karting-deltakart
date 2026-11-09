@@ -33,6 +33,7 @@ args = parser.parse_args()
 class CoreModes(Enum):
     JOYSTICK = "joystick"
     HEADSET = "headset"
+    CAMERA = "camera"
     SOCKET_RECIEVER = "socket-reciever"
     SOCKET_TRANSMITTER = "socket-transmitter"
 
@@ -56,7 +57,7 @@ class Kart_Settings():
         self.JS_DTZN = settings_json["js_dtzn"]      
         self.VERBOSE = settings_json["verbose"] 
         self.CAM_MAX_S = settings_json["cam_max_s"] 
-        self.CORE_MODE = CoreModes.HEADSET if settings_json["core_mode"].lower() == CoreModes.HEADSET.value else CoreModes.JOYSTICK
+        self.CORE_MODE = CoreModes.HEADSET if settings_json["core_mode"].lower() == CoreModes.HEADSET.value else CoreModes.CAMERA if settings_json["core_mode"].lower() == CoreModes.CAMERA.value else CoreModes.JOYSTICK
 
 
 def generate_defaults():

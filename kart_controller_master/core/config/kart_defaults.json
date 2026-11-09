@@ -19,7 +19,7 @@
   "verbose": false,
   "motor_maxangle": 255,
   "generate_defaults": 0,
-  "core_mode": "headset",
+  "core_mode": "camera",
   "motor_baseangle": 10,
   "cam_bbox": [
     526,
